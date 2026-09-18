@@ -9,24 +9,48 @@ Root: `https://gis.portlandmaine.gov/maps/rest/services`
 
 | Layer | Used for | Required |
 |---|---|---|
-| `Development_Review_Parcels/MapServer/0` | Parcel boundary, address, parcel id, lot area | yes |
-| `Zoning/MapServer/5` | Base zoning district | yes |
-| `Zoning/MapServer/6` | Overlay zones | no |
-| `Zoning/MapServer/2` | Shoreland overlay | no |
-| `Zoning/MapServer/3` | Stream protection overlay | no |
-| `Zoning/MapServer/1` | Coastal stability / bluffs | no |
-| `transportation/Streets/MapServer/0` | Street centrelines, to identify the front lot line | no |
-| `Historic/MapServer/0` | Locally designated historic districts | no |
+| Parcels | Parcel boundary, address, parcel id, lot area | yes |
+| Base zoning districts | The zoning district | yes |
+| Overlay zones | Mapped overlays | no |
+| Shoreland overlay | Shoreland setbacks and coverage cap | no |
+| Stream protection overlay | Stream setbacks | no |
+| Coastal stability / bluffs | Geotechnical review flag | no |
+| Street centrelines | Identifying the front lot line | no |
+| Historic districts | Historic review flag | no |
 
-Layer numbers move when the city republishes a service. **The numbers above
-have not been confirmed against the live server** — see the note in the README
-— so run `npm run gis:probe` before trusting them, and override whatever it
-reports as `FAIL` using `.env.example`.
+**No URL above is hardcoded**, because layer indices move whenever a service is
+republished — and that failure is worse than a crash, since the old index
+usually still returns *something*. Instead `src/lib/gis/discovery.ts` resolves
+each layer at run time:
 
-The app never assumes a field name. It reads each layer's own field list and
-matches against a candidate list in `src/lib/gis/fields.ts`, so `ADDRESS`,
+1. the layer's environment variable, if set, used verbatim;
+2. each candidate service in `src/lib/gis/config.ts`, whose layer list is
+   searched **by name**, with exclusions — `"Shoreland Overlay Zone"` contains
+   `"overlay zone"`, so the generic overlay layer must be stopped from
+   resolving to it;
+3. the operational layers of the city's published ArcGIS Online web map, which
+   the city maintains, so a renamed or relocated service fixes itself;
+4. for parcels only, Maine GeoLibrary's statewide layer.
+
+Successful resolutions are cached for an hour; failures are always retried, so
+a brief outage does not pin the app to "broken". Everything tried, and why each
+attempt failed, is shown at **`/diagnostics`** and by `npm run gis:probe`.
+
+Field names are handled the same way: the app reads each layer's own field list
+and matches against candidates in `src/lib/gis/fields.ts`, so `ADDRESS`,
 `FULL_ADDRESS`, `SITE_ADDR` and `PROP_LOC` all work. A layer with none of the
 names it knows is reported as a gap rather than silently skipped.
+
+## Parcel fallback — Maine GeoLibrary
+
+[Maine Parcels, Organized Towns](https://hub.arcgis.com/datasets/maine::maine-parcels-organized-towns-1),
+a standardized statewide parcel layer hosted on ArcGIS Online rather than on
+the city's own server. Used only when every Portland parcel candidate fails.
+
+It carries no zoning, and **zoning has no substitute**: only Portland publishes
+Portland's districts and overlays. If the city's server is unreachable you can
+still get lot geometry, but the district will read as unknown and the app will
+decline to produce an envelope.
 
 ## Flood — FEMA National Flood Hazard Layer
 

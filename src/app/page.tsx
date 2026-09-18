@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AddressForm } from "@/components/AddressForm";
 import { Result } from "@/components/Result";
 import { runAnalysis } from "@/lib/engine/run";
@@ -48,8 +49,14 @@ export default async function Page({
           ) : null}
           {outcome.kind === "upstream" ? (
             <p className="mt-3 text-sm text-[color:var(--color-muted)]">
-              This usually means the City of Portland&rsquo;s GIS service is down or has moved. Run{" "}
-              <code className="font-mono">npm run gis:probe</code> to see which layers are reachable.
+              This means the City of Portland&rsquo;s GIS could not be reached from this server.{" "}
+              <Link
+                href="/diagnostics"
+                className="text-[color:var(--color-accent)] underline underline-offset-2"
+              >
+                Open diagnostics
+              </Link>{" "}
+              to see exactly which endpoints were tried and what to set.
             </p>
           ) : null}
         </div>
@@ -57,7 +64,16 @@ export default async function Page({
 
       {outcome?.ok ? <Result result={outcome.result} /> : null}
 
-      <footer className="border-t border-[color:var(--color-line)] pt-6 text-sm text-[color:var(--color-muted)]">
+      <footer className="flex flex-col gap-3 border-t border-[color:var(--color-line)] pt-6 text-sm text-[color:var(--color-muted)]">
+        <p>
+          <Link
+            href="/diagnostics"
+            className="text-[color:var(--color-accent)] underline underline-offset-2"
+          >
+            Diagnostics
+          </Link>{" "}
+          — what data sources this server can reach.
+        </p>
         <p>
           An independent early-stage feasibility tool. Not affiliated with the City of Portland, and
           not a zoning determination. Only the city&rsquo;s Planning &amp; Urban Development

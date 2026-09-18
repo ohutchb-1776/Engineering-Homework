@@ -38,7 +38,7 @@ export type GisFeature = Feature<Geometry, Record<string, unknown>>;
 
 const layerInfoCache = new Map<string, Promise<LayerInfo>>();
 
-async function fetchJson(url: string, layerUrl: string): Promise<unknown> {
+export async function fetchArcgisJson(url: string, layerUrl: string): Promise<unknown> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), GIS_TIMEOUT_MS);
   try {
@@ -73,7 +73,7 @@ export function getLayerInfo(layerUrl: string): Promise<LayerInfo> {
   if (cached) return cached;
 
   const pending = (async (): Promise<LayerInfo> => {
-    const body = (await fetchJson(`${layerUrl}?f=json`, layerUrl)) as {
+    const body = (await fetchArcgisJson(`${layerUrl}?f=json`, layerUrl)) as {
       name?: string;
       geometryType?: string;
       fields?: LayerField[];
@@ -123,7 +123,7 @@ export async function queryLayer(layerUrl: string, options: QueryOptions): Promi
     params.set("spatialRel", "esriSpatialRelIntersects");
   }
 
-  const body = (await fetchJson(`${layerUrl}/query?${params.toString()}`, layerUrl)) as {
+  const body = (await fetchArcgisJson(`${layerUrl}/query?${params.toString()}`, layerUrl)) as {
     features?: { attributes?: Record<string, unknown>; geometry?: unknown }[];
   };
 

@@ -1,18 +1,21 @@
 /**
- * Prints what the City of Portland's GIS is actually serving right now.
+ * Prints where the app's layers actually resolve to right now, and why.
  *
  *   npm run gis:probe
  *   npm run gis:probe -- "389 Congress St"
  *
- * Run this first whenever the app starts reporting layers as unavailable, or
- * whenever you are setting the endpoint environment variables for a new
- * deployment. It reports, per layer, whether it resolves, what it is called,
- * and which of the field names the app looks for it actually has — which is
- * exactly what you need to fix src/lib/gis/config.ts or src/lib/gis/fields.ts.
+ * The app discovers its endpoints at run time (see src/lib/gis/discovery.ts),
+ * so this is not a list of guesses — it is what the app would use. Run it when
+ * addresses stop resolving. Anything reported UNRESOLVED needs its environment
+ * variable set; everything else is already working.
+ *
+ * The same report is available in a browser at /diagnostics, which is the one
+ * to use when the app works locally but not on the deployed host.
  */
-import { LAYERS, type LayerRef } from "../src/lib/gis/config";
+import { resolveAllLayers } from "../src/lib/gis/discovery";
 import { getLayerInfo, queryLayer } from "../src/lib/gis/arcgis";
 import { FIELD_CANDIDATES, resolveField, type FieldConcept } from "../src/lib/gis/fields";
+import { LAYER_SPEC_BY_KEY } from "../src/lib/gis/config";
 import { runAnalysis } from "../src/lib/engine/run";
 
 const CONCEPTS_BY_LAYER: Partial<Record<string, FieldConcept[]>> = {
@@ -27,41 +30,47 @@ const CONCEPTS_BY_LAYER: Partial<Record<string, FieldConcept[]>> = {
   streets: ["streetName"],
 };
 
-async function probe(layer: LayerRef): Promise<boolean> {
-  process.stdout.write(`\n${layer.key}${layer.required ? " (required)" : ""}\n  ${layer.url}\n`);
-  try {
-    const info = await getLayerInfo(layer.url);
-    console.log(`  OK  "${info.name}" — ${info.geometryType ?? "unknown geometry"}, ${info.fields.length} fields`);
+async function main() {
+  console.log("Resolving every layer the app depends on.\n");
 
-    for (const concept of CONCEPTS_BY_LAYER[layer.key] ?? []) {
-      const resolved = resolveField(info.fields, concept);
-      if (resolved) {
-        console.log(`      ${concept}: ${resolved}`);
-      } else {
-        console.log(
-          `      ${concept}: NOT FOUND — looked for ${FIELD_CANDIDATES[concept].join(", ")}`,
-        );
-        console.log(`        available: ${info.fields.map((f) => f.name).join(", ")}`);
-      }
+  const resolved = await resolveAllLayers(true);
+  let requiredFailures = 0;
+
+  for (const layer of resolved) {
+    console.log(`\n${layer.key}${layer.required ? " (required)" : ""} — ${layer.label}`);
+
+    if (!layer.url) {
+      console.log("  UNRESOLVED. Tried:");
+      for (const attempt of layer.attempts) console.log(`    ${attempt.url}\n      ${attempt.outcome}`);
+      console.log(`  Fix: set ${LAYER_SPEC_BY_KEY[layer.key]?.envVar} to a working layer URL.`);
+      if (layer.required) requiredFailures += 1;
+      continue;
     }
 
-    const sample = await queryLayer(layer.url, { where: "1=1", resultRecordCount: 1, returnGeometry: false });
-    console.log(`      sample query returned ${sample.length} feature(s)`);
-    return true;
-  } catch (error) {
-    console.log(`  FAIL  ${error instanceof Error ? error.message : String(error)}`);
-    return false;
-  }
-}
+    console.log(`  ${layer.url}`);
+    console.log(`  found via ${layer.via}${layer.serverName ? ` — "${layer.serverName}"` : ""}`);
 
-async function main() {
-  console.log("Probing the layers this app depends on.\n");
-  console.log("Anything marked FAIL needs its endpoint overridden — see .env.example.");
-
-  let requiredFailures = 0;
-  for (const layer of Object.values(LAYERS)) {
-    const ok = await probe(layer);
-    if (!ok && layer.required) requiredFailures += 1;
+    try {
+      const info = await getLayerInfo(layer.url);
+      for (const concept of CONCEPTS_BY_LAYER[layer.key] ?? []) {
+        const field = resolveField(info.fields, concept);
+        if (field) {
+          console.log(`    ${concept}: ${field}`);
+        } else {
+          console.log(`    ${concept}: NOT FOUND — looked for ${FIELD_CANDIDATES[concept].join(", ")}`);
+          console.log(`      available: ${info.fields.map((f) => f.name).join(", ")}`);
+        }
+      }
+      const sample = await queryLayer(layer.url, {
+        where: "1=1",
+        resultRecordCount: 1,
+        returnGeometry: false,
+      });
+      console.log(`    sample query returned ${sample.length} feature(s)`);
+    } catch (error) {
+      console.log(`    could not read it: ${error instanceof Error ? error.message : String(error)}`);
+      if (layer.required) requiredFailures += 1;
+    }
   }
 
   const address = process.argv.slice(2).join(" ").trim();
@@ -79,17 +88,15 @@ async function main() {
       console.log(`  storeys:   ${base.envelope.stories.value ?? "?"}`);
       console.log(`  footprint: ${base.envelope.maxFootprintSf.value ?? "?"} sf`);
       console.log(`  units:     ${base.envelope.estimatedUnits.value ?? "?"}`);
-      if (outcome.result.gaps.length > 0) {
-        console.log("  gaps:");
-        for (const gap of outcome.result.gaps) console.log(`    - ${gap}`);
-      }
+      for (const gap of outcome.result.gaps) console.log(`  gap: ${gap}`);
     }
   }
 
   if (requiredFailures > 0) {
-    console.error(`\n${requiredFailures} required layer(s) unreachable.`);
+    console.error(`\n${requiredFailures} required layer(s) unusable.`);
     process.exit(1);
   }
+  console.log("\nAll required layers resolved.");
 }
 
 void main();

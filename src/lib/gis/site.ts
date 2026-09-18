@@ -14,7 +14,8 @@
 import type { Feature, Geometry, Polygon, MultiPolygon } from "geojson";
 import area from "@turf/area";
 import centroid from "@turf/centroid";
-import { LAYERS, type LayerRef } from "./config";
+import { LAYER_SPEC_BY_KEY } from "./config";
+import { resolveLayer, type ResolvedLayer } from "./discovery";
 import { GisError, getLayerInfo, queryLayer, sqlQuote, type GisFeature, type LayerInfo } from "./arcgis";
 import { asNumber, asString, readField, resolveField } from "./fields";
 import { geocodeAddress, inPortland } from "./geocode";
@@ -28,6 +29,8 @@ export interface SourceRecord {
   /** What we got: a hit, nothing there, or an outage. */
   status: "ok" | "empty" | "unavailable";
   detail?: string;
+  /** How the endpoint was found. See src/lib/gis/discovery.ts. */
+  via?: ResolvedLayer["via"];
 }
 
 export interface OverlayHit {
@@ -89,8 +92,15 @@ export async function lookupSite(rawAddress: string): Promise<SiteData> {
     throw new SiteLookupError("Enter a street address in Portland, Maine.", "not-found");
   }
 
-  const parcelInfo = await getLayerInfoOrThrow(LAYERS.parcels, sources);
-  const { feature: parcelFeature, method } = await findParcel(normalized, parcelInfo, sources, gaps);
+  const parcelLayer = await locate("parcels");
+  const parcelInfo = await getLayerInfoOrThrow(parcelLayer, sources);
+  const { feature: parcelFeature, method } = await findParcel(
+    normalized,
+    parcelLayer,
+    parcelInfo,
+    sources,
+    gaps,
+  );
 
   const geometry = parcelFeature.geometry;
   if (!geometry || (geometry.type !== "Polygon" && geometry.type !== "MultiPolygon")) {
@@ -134,20 +144,45 @@ export async function lookupSite(rawAddress: string): Promise<SiteData> {
   };
 }
 
-async function getLayerInfoOrThrow(layer: LayerRef, sources: SourceRecord[]): Promise<LayerInfo> {
+/** Find a layer's current URL, or null if nothing resolved. */
+async function locate(key: string): Promise<ResolvedLayer> {
+  const spec = LAYER_SPEC_BY_KEY[key];
+  if (!spec) throw new Error(`no layer spec named "${key}"`);
+  return resolveLayer(spec);
+}
+
+async function getLayerInfoOrThrow(
+  layer: ResolvedLayer,
+  sources: SourceRecord[],
+): Promise<LayerInfo> {
+  if (!layer.url) {
+    sources.push({
+      key: layer.key,
+      label: layer.label,
+      url: "",
+      status: "unavailable",
+      via: layer.via,
+      detail: layer.attempts.map((a) => `${a.url}: ${a.outcome}`).join(" | "),
+    });
+    throw new SiteLookupError(
+      `Could not find the ${layer.label} layer on any known endpoint, so no parcel could be identified. Open /diagnostics to see everything that was tried.`,
+      "upstream",
+      sources,
+    );
+  }
   try {
-    const info = await getLayerInfo(layer.url);
-    return info;
+    return await getLayerInfo(layer.url);
   } catch (error) {
     sources.push({
       key: layer.key,
       label: layer.label,
       url: layer.url,
       status: "unavailable",
+      via: layer.via,
       detail: error instanceof GisError ? error.message : String(error),
     });
     throw new SiteLookupError(
-      `Could not reach the ${layer.label} layer, so no parcel could be identified.`,
+      `Could not reach the ${layer.label} layer, so no parcel could be identified. Open /diagnostics to see what is reachable.`,
       "upstream",
       sources,
     );
@@ -156,6 +191,7 @@ async function getLayerInfoOrThrow(layer: LayerRef, sources: SourceRecord[]): Pr
 
 async function findParcel(
   normalized: string,
+  parcelLayer: ResolvedLayer,
   parcelInfo: LayerInfo,
   sources: SourceRecord[],
   gaps: string[],
@@ -163,14 +199,15 @@ async function findParcel(
   feature: GisFeature;
   method: SiteData["matchMethod"];
 }> {
+  const parcelUrl = parcelLayer.url!;
   const addressField = resolveField(parcelInfo.fields, "address");
 
   if (addressField) {
     const where = `UPPER(${addressField}) LIKE ${sqlQuote(`${normalized}%`)}`;
-    const matches = await queryLayer(LAYERS.parcels.url, { where, resultRecordCount: 25 });
+    const matches = await queryLayer(parcelUrl, { where, resultRecordCount: 25 });
 
     if (matches.length === 1) {
-      sources.push(okSource(LAYERS.parcels, `matched on ${addressField}`));
+      sources.push(okSource(parcelLayer, `matched on ${addressField}`));
       return { feature: matches[0]!, method: "parcel-address-field" };
     }
     if (matches.length > 1) {
@@ -178,7 +215,7 @@ async function findParcel(
       // one lot). Identical geometry means it is really one parcel.
       const distinct = dedupeByGeometry(matches);
       if (distinct.length === 1) {
-        sources.push(okSource(LAYERS.parcels, `matched on ${addressField}`));
+        sources.push(okSource(parcelLayer, `matched on ${addressField}`));
         return { feature: distinct[0]!, method: "parcel-address-field" };
       }
       const labels = distinct
@@ -199,7 +236,7 @@ async function findParcel(
 
   const hit = await geocodeAddress(normalized);
   if (!hit) {
-    sources.push({ ...okSource(LAYERS.parcels), status: "empty" });
+    sources.push({ ...okSource(parcelLayer), status: "empty" });
     throw new SiteLookupError(
       `No Portland parcel matched "${normalized}". Check the street number and spelling.`,
       "not-found",
@@ -214,13 +251,13 @@ async function findParcel(
     );
   }
 
-  const atPoint = await queryLayer(LAYERS.parcels.url, {
+  const atPoint = await queryLayer(parcelUrl, {
     intersects: { type: "Point", coordinates: [hit.point[0], hit.point[1]] },
     resultRecordCount: 5,
   });
 
   if (atPoint.length === 0) {
-    sources.push({ ...okSource(LAYERS.parcels), status: "empty" });
+    sources.push({ ...okSource(parcelLayer), status: "empty" });
     throw new SiteLookupError(
       `"${normalized}" geocoded successfully but falls outside every mapped Portland parcel.`,
       "not-found",
@@ -228,7 +265,7 @@ async function findParcel(
     );
   }
 
-  sources.push(okSource(LAYERS.parcels, `matched by point from the ${hit.source}`));
+  sources.push(okSource(parcelLayer, `matched by point from the ${hit.source}`));
   return { feature: atPoint[0]!, method: "geocode-point-in-parcel" };
 }
 
@@ -237,29 +274,38 @@ async function lookupZoning(
   sources: SourceRecord[],
   gaps: string[],
 ): Promise<SiteData["zoning"]> {
+  const layer = await locate("zoning");
+  if (!layer.url) {
+    sources.push(unresolvedSource(layer));
+    gaps.push(
+      "The city zoning layer could not be found on any known endpoint, so the district could not be determined.",
+    );
+    return { districtCode: null, districtName: null, mappedMaxHeightFt: null };
+  }
+
   try {
-    const info = await getLayerInfo(LAYERS.zoning.url);
-    const features = await queryLayer(LAYERS.zoning.url, {
+    const info = await getLayerInfo(layer.url);
+    const features = await queryLayer(layer.url, {
       intersects: { type: "Point", coordinates: [centre[0], centre[1]] },
       returnGeometry: false,
       resultRecordCount: 5,
     });
 
     if (features.length === 0) {
-      sources.push({ ...okSource(LAYERS.zoning), status: "empty" });
+      sources.push({ ...okSource(layer), status: "empty" });
       gaps.push("No zoning district polygon covers this parcel's centre point.");
       return { districtCode: null, districtName: null, mappedMaxHeightFt: null };
     }
 
     const attributes = features[0]!.properties;
-    sources.push(okSource(LAYERS.zoning));
+    sources.push(okSource(layer));
     return {
       districtCode: asString(readField(attributes, info.fields, "zoningDistrict")),
       districtName: asString(readField(attributes, info.fields, "zoningName")),
       mappedMaxHeightFt: asNumber(readField(attributes, info.fields, "maxHeightFt")),
     };
   } catch (error) {
-    sources.push(failedSource(LAYERS.zoning, error));
+    sources.push(failedSource(layer, error));
     gaps.push("The city zoning layer was unreachable, so the district could not be confirmed.");
     return { districtCode: null, districtName: null, mappedMaxHeightFt: null };
   }
@@ -278,17 +324,19 @@ async function lookupOverlays(
   sources: SourceRecord[],
   gaps: string[],
 ): Promise<OverlayHit[]> {
-  const optional: LayerRef[] = [
-    LAYERS.shoreland,
-    LAYERS.stream,
-    LAYERS.coastalStability,
-    LAYERS.historic,
-    LAYERS.overlays,
-    LAYERS.flood,
-  ];
+  const optional = await Promise.all(
+    ["shoreland", "stream", "coastalStability", "historic", "overlays", "flood"].map((key) =>
+      locate(key),
+    ),
+  );
 
   const results = await Promise.all(
     optional.map(async (layer): Promise<OverlayHit[]> => {
+      if (!layer.url) {
+        sources.push(unresolvedSource(layer));
+        gaps.push(`Could not find the ${layer.label} layer, so that constraint is unknown.`);
+        return [];
+      }
       try {
         const info = await getLayerInfo(layer.url);
         const features = await queryLayer(layer.url, {
@@ -356,22 +404,31 @@ async function lookupStreets(
   sources: SourceRecord[],
   gaps: string[],
 ): Promise<LonLat[][]> {
+  const layer = await locate("streets");
+  if (!layer.url) {
+    sources.push(unresolvedSource(layer));
+    gaps.push(
+      "No street centreline layer could be found, so the front lot line could not be identified.",
+    );
+    return [];
+  }
+
   try {
-    const features = await queryLayer(LAYERS.streets.url, {
+    const features = await queryLayer(layer.url, {
       intersects: bufferBox(centre, 0.0018),
       resultRecordCount: 40,
     });
     if (features.length === 0) {
-      sources.push({ ...okSource(LAYERS.streets), status: "empty" });
+      sources.push({ ...okSource(layer), status: "empty" });
       gaps.push(
         "No street centreline was found near the parcel, so the front lot line could not be identified.",
       );
       return [];
     }
-    sources.push(okSource(LAYERS.streets));
+    sources.push(okSource(layer));
     return features.flatMap((feature) => toLineStrings(feature.geometry));
   } catch (error) {
-    sources.push(failedSource(LAYERS.streets, error));
+    sources.push(failedSource(layer, error));
     gaps.push(
       "The street centreline layer was unreachable, so the front lot line could not be identified.",
     );
@@ -432,16 +489,37 @@ function dedupeByGeometry(features: GisFeature[]): GisFeature[] {
   });
 }
 
-function okSource(layer: LayerRef, detail?: string): SourceRecord {
-  return { key: layer.key, label: layer.label, url: layer.url, status: "ok", detail };
-}
-
-function failedSource(layer: LayerRef, error: unknown): SourceRecord {
+function okSource(layer: ResolvedLayer, detail?: string): SourceRecord {
   return {
     key: layer.key,
     label: layer.label,
-    url: layer.url,
+    url: layer.url ?? "",
+    status: "ok",
+    via: layer.via,
+    detail,
+  };
+}
+
+function failedSource(layer: ResolvedLayer, error: unknown): SourceRecord {
+  return {
+    key: layer.key,
+    label: layer.label,
+    url: layer.url ?? "",
     status: "unavailable",
+    via: layer.via,
     detail: error instanceof GisError ? error.message : String(error),
+  };
+}
+
+function unresolvedSource(layer: ResolvedLayer): SourceRecord {
+  return {
+    key: layer.key,
+    label: layer.label,
+    url: "",
+    status: "unavailable",
+    via: layer.via,
+    detail: `No endpoint resolved. Tried: ${layer.attempts
+      .map((a) => `${a.url} (${a.outcome})`)
+      .join(" | ")}`,
   };
 }

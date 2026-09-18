@@ -73,6 +73,11 @@ Do this with the code open in one window and the JSON in another.
 
 Districts still needing a first pass are printed by `npm run rules:lint`.
 
+This is separate from the GIS endpoints, which the app discovers by itself —
+see `/diagnostics` and [DATA-SOURCES.md](./DATA-SOURCES.md). Rule data is the
+part no amount of discovery can fix, because it lives in a PDF and not in a
+service.
+
 ## Adding a district
 
 The city's zoning map has districts this dataset does not hold — island

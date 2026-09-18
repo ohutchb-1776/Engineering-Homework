@@ -1,115 +1,207 @@
 /**
- * Where the app gets its geography.
+ * Where the app looks for its geography.
  *
- * Every endpoint is overridable with an environment variable, because layer
- * numbering on a municipal ArcGIS server changes when the GIS team
- * republishes a service. `npm run gis:probe` prints what is actually live and
- * tells you which of these to change.
+ * Municipal ArcGIS services move: layer numbers shift when a service is
+ * republished, and service names change with them. Hardcoding one URL per
+ * layer means the app breaks silently months later, so instead each layer
+ * declares *how to find itself*: an environment override, then a list of
+ * candidate services, then ArcGIS Online items the city publishes. The first
+ * one that resolves wins, and the resolution is reported on /diagnostics.
  */
 
-const env = (key: string, fallback: string): string => {
+const env = (key: string): string | null => {
   const value = process.env[key];
-  return value && value.trim().length > 0 ? value.trim() : fallback;
+  return value && value.trim().length > 0 ? value.trim() : null;
 };
 
 /** Root of the City of Portland, Maine ArcGIS REST services directory. */
-export const PORTLAND_GIS_ROOT = env(
-  "PORTLAND_GIS_ROOT",
-  "https://gis.portlandmaine.gov/maps/rest/services",
-);
+export const PORTLAND_GIS_ROOT =
+  env("PORTLAND_GIS_ROOT") ?? "https://gis.portlandmaine.gov/maps/rest/services";
 
-export interface LayerRef {
-  /** Stable key used in code and in the probe output. */
+/** The same server has been published under both of these paths over time. */
+const PORTLAND_ROOTS = [
+  PORTLAND_GIS_ROOT,
+  "https://gis.portlandmaine.gov/maps/rest/services",
+  "https://gis.portlandmaine.gov/arcgis/rest/services",
+];
+
+/**
+ * The city's public Parcel Viewer. Its web map lists the service URLs the city
+ * is actually serving today, which makes it a self-updating source of truth
+ * when the hardcoded candidates below go stale.
+ */
+export const PORTLAND_PARCEL_VIEWER_ITEM =
+  env("PORTLAND_AGOL_WEBMAP_ITEM") ?? "6208128831ea40c7a7c432317527336b";
+
+/**
+ * Maine GeoLibrary's statewide parcel layer, used only if every Portland
+ * parcel candidate fails. It is hosted on ArcGIS Online rather than the city's
+ * own server, so it stays up when the city's does not. It carries no zoning.
+ */
+export const MAINE_STATEWIDE_PARCELS_ITEM =
+  env("MAINE_PARCELS_AGOL_ITEM") ?? "346131b710a645ffb624f448a9cba6d4";
+
+/** How to find one layer. */
+export interface LayerSpec {
+  /** Stable key used in code, in the probe and on /diagnostics. */
   key: string;
   /** Human label used in the UI's source list. */
   label: string;
-  url: string;
   /**
-   * When false, the pipeline continues (with a recorded gap) if the layer is
-   * unreachable. Only the parcel layer is genuinely required.
+   * When false, the pipeline continues (with a recorded gap) if the layer
+   * cannot be found. Only the parcel layer is genuinely required.
    */
   required: boolean;
+  /** Environment variable that pins this layer to an exact URL. */
+  envVar: string;
+  /**
+   * Services to search, in order. Each may be a MapServer/FeatureServer root
+   * (whose layers are searched by name) or a layer URL ending in an index.
+   */
+  candidates: string[];
+  /**
+   * Layer names to match inside a service, lowercase, matched as substrings
+   * in order of preference.
+   */
+  layerNames: string[];
+  /**
+   * Layer names that must NOT match, lowercase substrings. Needed because
+   * "Shoreland Overlay Zone" contains both "shoreland" and "overlay zone".
+   */
+  excludeNames?: string[];
+  /** Layer index to use if no name matches. Omit to fail instead of guessing. */
+  fallbackIndex?: number;
+  /** ArcGIS Online item ids to fall back to, in order. */
+  agolItems?: string[];
 }
 
-export const LAYERS = {
-  /** Assessor / development-review parcels: the spatial unit everything hangs off. */
-  parcels: {
+const portland = (service: string): string[] =>
+  PORTLAND_ROOTS.map((root) => `${root}/${service}`);
+
+export const LAYER_SPECS: LayerSpec[] = [
+  {
     key: "parcels",
     label: "City of Portland parcels",
-    url: env("PORTLAND_PARCEL_LAYER", `${PORTLAND_GIS_ROOT}/Development_Review_Parcels/MapServer/0`),
     required: true,
+    envVar: "PORTLAND_PARCEL_LAYER",
+    candidates: [
+      ...portland("Development_Review_Parcels/MapServer"),
+      ...portland("Parcels/MapServer"),
+      ...portland("Assessing/MapServer"),
+      ...portland("Development_Review_Parcels/FeatureServer"),
+    ],
+    layerNames: ["parcel", "property", "lot"],
+    fallbackIndex: 0,
+    agolItems: [MAINE_STATEWIDE_PARCELS_ITEM],
   },
-  /** Base zoning districts. */
-  zoning: {
+  {
     key: "zoning",
     label: "City of Portland zoning districts",
-    url: env("PORTLAND_ZONING_LAYER", `${PORTLAND_GIS_ROOT}/Zoning/MapServer/5`),
     required: true,
+    envVar: "PORTLAND_ZONING_LAYER",
+    candidates: [
+      ...portland("Zoning/MapServer"),
+      ...portland("Zoning/FeatureServer"),
+      ...portland("Zoning_Map_2026_05_01/MapServer"),
+      ...portland("Zoning_Map_2026_05_01/FeatureServer"),
+    ],
+    // "zoning" alone would also match "shoreland overlay zone", so the more
+    // specific names come first and the overlay layers are excluded outright.
+    layerNames: ["base zoning", "zoning district", "zoning"],
+    excludeNames: ["overlay", "shoreland", "stream", "coastal", "historic", "line"],
   },
-  /** Catch-all overlay zone layer. */
-  overlays: {
+  {
     key: "overlays",
     label: "City of Portland overlay zones",
-    url: env("PORTLAND_OVERLAY_LAYER", `${PORTLAND_GIS_ROOT}/Zoning/MapServer/6`),
     required: false,
+    envVar: "PORTLAND_OVERLAY_LAYER",
+    candidates: [...portland("Zoning/MapServer"), ...portland("Zoning/FeatureServer")],
+    layerNames: ["overlay zones", "overlay zone", "overlay"],
+    // Each of these has its own spec; the generic layer must not steal them.
+    excludeNames: ["shoreland", "stream", "coastal", "historic"],
   },
-  shoreland: {
+  {
     key: "shoreland",
     label: "Shoreland overlay zone",
-    url: env("PORTLAND_SHORELAND_LAYER", `${PORTLAND_GIS_ROOT}/Zoning/MapServer/2`),
     required: false,
+    envVar: "PORTLAND_SHORELAND_LAYER",
+    candidates: [...portland("Zoning/MapServer"), ...portland("Zoning/FeatureServer")],
+    layerNames: ["shoreland"],
   },
-  stream: {
+  {
     key: "stream",
     label: "Stream protection overlay",
-    url: env("PORTLAND_STREAM_LAYER", `${PORTLAND_GIS_ROOT}/Zoning/MapServer/3`),
     required: false,
+    envVar: "PORTLAND_STREAM_LAYER",
+    candidates: [...portland("Zoning/MapServer"), ...portland("Zoning/FeatureServer")],
+    layerNames: ["stream"],
   },
-  coastalStability: {
+  {
     key: "coastalStability",
     label: "Coastal stability / bluff overlay",
-    url: env("PORTLAND_COASTAL_LAYER", `${PORTLAND_GIS_ROOT}/Zoning/MapServer/1`),
     required: false,
+    envVar: "PORTLAND_COASTAL_LAYER",
+    candidates: [...portland("Zoning/MapServer"), ...portland("Zoning/FeatureServer")],
+    layerNames: ["coastal stability", "coastal", "bluff"],
   },
-  /** Street centrelines, used to work out which lot line is the frontage. */
-  streets: {
+  {
     key: "streets",
     label: "Street centerlines",
-    url: env("PORTLAND_STREETS_LAYER", `${PORTLAND_GIS_ROOT}/transportation/Streets/MapServer/0`),
     required: false,
+    envVar: "PORTLAND_STREETS_LAYER",
+    candidates: [
+      ...portland("transportation/Streets/MapServer"),
+      ...portland("Streets/MapServer"),
+      ...portland("transportation/Transportation/MapServer"),
+    ],
+    layerNames: ["street centerline", "centerline", "street", "road"],
   },
-  /** Locally designated historic districts. */
-  historic: {
+  {
     key: "historic",
     label: "Historic districts",
-    url: env("PORTLAND_HISTORIC_LAYER", `${PORTLAND_GIS_ROOT}/Historic/MapServer/0`),
     required: false,
+    envVar: "PORTLAND_HISTORIC_LAYER",
+    candidates: [
+      ...portland("Historic/MapServer"),
+      ...portland("HistoricPreservation/MapServer"),
+      ...portland("Planning/MapServer"),
+    ],
+    layerNames: ["historic district", "historic", "landmark"],
   },
-  /** FEMA National Flood Hazard Layer, flood hazard areas (S_Fld_Haz_Ar). */
-  flood: {
+  {
     key: "flood",
     label: "FEMA National Flood Hazard Layer",
-    url: env(
-      "FEMA_NFHL_LAYER",
-      "https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28",
-    ),
     required: false,
+    envVar: "FEMA_NFHL_LAYER",
+    candidates: ["https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer"],
+    layerNames: ["flood hazard zones", "flood hazard areas", "flood hazard", "s_fld_haz_ar"],
+    fallbackIndex: 28,
   },
-} as const satisfies Record<string, LayerRef>;
+];
 
-export type LayerKey = keyof typeof LAYERS;
+export const LAYER_SPEC_BY_KEY: Record<string, LayerSpec> = Object.fromEntries(
+  LAYER_SPECS.map((spec) => [spec.key, spec]),
+);
+
+export type LayerKey = (typeof LAYER_SPECS)[number]["key"];
+
+/** ArcGIS Online sharing API, used to resolve item and web map URLs. */
+export const AGOL_SHARING =
+  env("AGOL_SHARING_URL") ?? "https://www.arcgis.com/sharing/rest";
 
 /**
  * US Census Bureau geocoder. Free, keyless, and good enough to place an
  * address inside a parcel when the parcel layer's own address field misses.
  */
-export const CENSUS_GEOCODER = env(
-  "CENSUS_GEOCODER_URL",
-  "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress",
-);
+export const CENSUS_GEOCODER =
+  env("CENSUS_GEOCODER_URL") ??
+  "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress";
 
 /** Network timeout for a single upstream GIS request. */
-export const GIS_TIMEOUT_MS = Number(env("GIS_TIMEOUT_MS", "12000"));
+export const GIS_TIMEOUT_MS = Number(env("GIS_TIMEOUT_MS") ?? "12000");
+
+/** How long a successful endpoint resolution is reused, in milliseconds. */
+export const DISCOVERY_TTL_MS = Number(env("GIS_DISCOVERY_TTL_MS") ?? String(60 * 60 * 1000));
 
 /** Portland's approximate bounding box, used to reject obviously wrong hits. */
 export const PORTLAND_BBOX = {

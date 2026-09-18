@@ -28,8 +28,9 @@ Portland recodified its entire land use ordinance under **ReCode Portland**,
 effective **4 December 2024**, so the district standards here may be wrong in
 either direction.
 
-**The GIS layer numbers in `src/lib/gis/config.ts` are likewise unconfirmed
-against the live server.** Run `npm run gis:probe` before trusting them.
+**The GIS endpoints are likewise unconfirmed against the live server**, which
+is why the app does not trust them: it discovers its layers at run time, and
+`/diagnostics` shows you what it actually found.
 
 Every value in the dataset carries `"confidence": "needs-verification"`, the
 app shows an unverified-data banner on every result, and
@@ -44,6 +45,9 @@ verification pass before anyone relies on a number.**
 
 ## What it does
 
+0. Finds the city's GIS layers, by searching candidate services and matching
+   layers by **name** rather than by index, then falling back to the ArcGIS
+   Online web map the city publishes.
 1. Resolves the address against the City of Portland parcel layer — by the
    layer's own address field first, falling back to the US Census geocoder and
    a point-in-parcel query.
@@ -92,6 +96,16 @@ all.
 
 ---
 
+## Deploying it
+
+Import the repo at [vercel.com/new](https://vercel.com/new) and deploy — there
+is nothing to configure. It needs a Node server rather than a static host,
+because it proxies the city's GIS through its own route handlers and renders
+the result server-side.
+
+After the first deploy, open `/diagnostics` on the deployed URL to confirm that
+host can reach the city's GIS.
+
 ## Running it
 
 Requires **Node.js 20.9+**.
@@ -107,17 +121,26 @@ is a public keyless endpoint.
 ```bash
 npm run check        # rules lint + typecheck + tests + eslint
 npm test             # tests only
-npm run gis:probe    # what the city's GIS is actually serving right now
+npm run gis:probe    # where every layer resolves to right now, and why
 npm run gis:probe -- "389 Congress St"   # ...and a full end-to-end analysis
 npm run rules:lint   # dataset integrity, and what still needs verifying
 npm run build && npm start
 ```
 
-`npm run gis:probe` is the first thing to run when the app reports layers as
-unavailable. It prints, per layer, whether it resolves, what it is called, and
-which of the field names the app looks for it actually has — which is exactly
-what you need to fix `src/lib/gis/config.ts` or `src/lib/gis/fields.ts`. Copy
-`.env.example` to `.env.local` to override any endpoint it reports as `FAIL`.
+## When addresses stop resolving
+
+Open **`/diagnostics`**. It runs the same endpoint resolution the analysis
+runs and reports, per layer, where it resolved to, how it was found, and which
+field names it matched — or, if it failed, every endpoint it tried and the
+reason each one did not work. Use it rather than the terminal when the app
+works locally but not on a deployed host; the two have different network
+access, and that difference is usually the whole problem.
+
+`npm run gis:probe` prints the same report on the command line.
+
+Only if a layer comes back **unresolved** do you need to configure anything:
+set the environment variable named on that layer to a working URL
+(see `.env.example`) and redeploy.
 
 ### A JSON API
 
@@ -136,23 +159,34 @@ page and the API run the same pipeline, so they cannot drift.
 - **MapLibre GL** with OpenStreetMap raster tiles — no key
 - **polygon-clipping** for setback geometry, **@turf/area** for geodesic areas,
   **@esri/arcgis-to-geojson-utils** for Esri→GeoJSON
-- No database. No auth. No LLM. Eight runtime dependencies.
+- No database. No auth. No LLM. No API keys. Eight runtime dependencies.
 
 The page is a server component; the address lives in the URL, so results are
 shareable and the back button works. The form is a plain `GET` form and needs
 no JavaScript. The only client component is the map.
 
+**Endpoints are discovered, not hardcoded.** A municipal GIS layer's index
+changes whenever the service is republished, so `.../Zoning/MapServer/5`
+becomes wrong without warning — and the failure is worse than a crash, because
+layer 5 still returns *something*. So the app asks each service what layers it
+has and matches by name, with exclusions (`"Shoreland Overlay Zone"` contains
+`"overlay zone"`, and must not be mistaken for the generic overlay layer). If
+the service itself has moved, it reads the city's published web map, which the
+city maintains and therefore stays correct on its own. Parcels have a final
+fallback to Maine GeoLibrary's statewide layer. Every step is recorded and
+shown on `/diagnostics`.
+
 ```
 data/rules/portland-me.json   every zoning number, with citations — no rule lives in src/
 data/test-addresses.json      ten real Portland addresses across district types
 src/lib/geometry/             local ft projection; per-edge setback clipping
-src/lib/gis/                  ArcGIS client, field resolution, address matching, site lookup
+src/lib/gis/                  endpoint discovery, ArcGIS client, field + address matching
 src/lib/rules/                dataset schema and loader
 src/lib/engine/               the calculation and its explanation trace
-src/app/                      one page, one API route
-scripts/gis-probe.ts          what the city's GIS is serving
+src/app/                      the page, the JSON API, and /diagnostics
+scripts/gis-probe.ts          where every layer resolves, on the command line
 scripts/rules-lint.ts         dataset integrity and verification status
-tests/                        78 tests, no network
+tests/                        96 tests, no network
 ```
 
 ### Why there is no LLM
@@ -165,13 +199,14 @@ you add one later, it should read the trace and never the code.
 
 ### Tests
 
-78 tests, no network access required.
+96 tests, no network access required.
 
 ```
 tests/geometry.test.ts   setback clipping, frontage detection, projection accuracy
 tests/engine.test.ts     the envelope calculation end to end on synthetic parcels
 tests/rules.test.ts      dataset integrity: citations, confidence, sane ranges
 tests/gis.test.ts        address normalisation, field resolution, overlay mapping
+tests/discovery.test.ts  endpoint discovery, name matching, and the fallback chain
 tests/pipeline.test.ts   address in, answer out, against a fake ArcGIS server
 ```
 
