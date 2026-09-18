@@ -44,6 +44,20 @@ derivation. That is conservative, and usually understates the buildable area.
 assessor's recorded area and the mapped boundary disagree by more than 10%, the
 app says so rather than picking one.
 
+## Address-matching assumptions
+
+**The street suffix is loosened if the strict match misses.** Assessors record
+the same lot as "5 MONUMENT SQ", "5 MONUMENT SQUARE" or just "5 MONUMENT", so
+after an exact prefix search fails the suffix is dropped and the search
+repeated. If that looser pattern matches several different lots, the app asks
+which one rather than picking.
+
+**An address that geocodes outside every parcel falls back to the nearest one
+within 300 ft.** Addresses on squares, plazas, pedestrian ways and long
+private drives geocode into the public right-of-way, which is not a parcel.
+The lot is still adjacent, so the nearest one is used — and the result says so
+and asks you to confirm on the map. Beyond 300 ft the app gives up instead.
+
 ## Rule-application assumptions
 
 **The most restrictive rule governs.** Where the base district, an overlay, and

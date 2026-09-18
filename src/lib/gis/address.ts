@@ -54,6 +54,26 @@ export function normalizeAddress(input: string): string {
     .trim();
 }
 
+/** The canonical suffix abbreviations, e.g. ST, AVE, SQ. */
+export const CANONICAL_SUFFIXES = new Set(Object.values(SUFFIXES));
+
+/**
+ * The address with a trailing street-suffix token removed, or null if there
+ * is none to remove.
+ *
+ * Assessors are inconsistent about suffixes in a way no abbreviation table
+ * fixes: a parcel on Monument Square may be recorded as "5 MONUMENT SQ",
+ * "5 MONUMENT SQUARE", or just "5 MONUMENT". Dropping the suffix gives a
+ * prefix that matches all three.
+ */
+export function withoutStreetSuffix(input: string): string | null {
+  const words = normalizeAddress(input).split(" ");
+  if (words.length < 3) return null;
+  const last = words[words.length - 1]!;
+  if (!CANONICAL_SUFFIXES.has(last)) return null;
+  return words.slice(0, -1).join(" ");
+}
+
 /** The leading house number, if the input starts with one. */
 export function houseNumberOf(input: string): string | null {
   const match = /^(\d+[A-Z]?)\b/.exec(normalizeAddress(input));

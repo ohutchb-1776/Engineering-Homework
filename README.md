@@ -48,9 +48,12 @@ verification pass before anyone relies on a number.**
 0. Finds the city's GIS layers, by searching candidate services and matching
    layers by **name** rather than by index, then falling back to the ArcGIS
    Online web map the city publishes.
-1. Resolves the address against the City of Portland parcel layer — by the
-   layer's own address field first, falling back to the US Census geocoder and
-   a point-in-parcel query.
+1. Resolves the address against the City of Portland parcel layer: the
+   layer's own address field first (loosening the street suffix if the strict
+   match misses), then the US Census geocoder and a point-in-parcel query,
+   then the nearest parcel within 300 ft — because an address on a square or
+   other public way geocodes into the right-of-way and lands inside no parcel
+   at all. Every loosening is reported, never silent.
 2. Measures the lot from the mapped boundary.
 3. Reads the base zoning district from the city's zoning layer.
 4. Collects overlays: shoreland, stream protection, coastal stability, historic
@@ -186,7 +189,7 @@ src/lib/engine/               the calculation and its explanation trace
 src/app/                      the page, the JSON API, and /diagnostics
 scripts/gis-probe.ts          where every layer resolves, on the command line
 scripts/rules-lint.ts         dataset integrity and verification status
-tests/                        96 tests, no network
+tests/                        105 tests, no network
 ```
 
 ### Why there is no LLM
@@ -199,7 +202,7 @@ you add one later, it should read the trace and never the code.
 
 ### Tests
 
-96 tests, no network access required.
+105 tests, no network access required.
 
 ```
 tests/geometry.test.ts   setback clipping, frontage detection, projection accuracy
@@ -207,6 +210,7 @@ tests/engine.test.ts     the envelope calculation end to end on synthetic parcel
 tests/rules.test.ts      dataset integrity: citations, confidence, sane ranges
 tests/gis.test.ts        address normalisation, field resolution, overlay mapping
 tests/discovery.test.ts  endpoint discovery, name matching, and the fallback chain
+tests/address-matching.test.ts  suffix mismatches, and addresses on public squares
 tests/pipeline.test.ts   address in, answer out, against a fake ArcGIS server
 ```
 

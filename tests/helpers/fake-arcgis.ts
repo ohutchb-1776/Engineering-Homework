@@ -27,6 +27,12 @@ export interface FakeService {
 }
 
 export interface FakeArcgisOptions {
+  /**
+   * Stands in for the US Census geocoder at `/geocode`. Maps a normalised
+   * address to a point, so the geocode fallback can be tested without leaving
+   * the process.
+   */
+  geocoder?: Record<string, [number, number]>;
   /** Service roots, keyed by path segment. */
   services?: Record<string, FakeService>;
   /** ArcGIS Online items, keyed by item id. */
@@ -52,6 +58,24 @@ export async function startFakeArcgis(
     const url = new URL(req.url ?? "/", "http://localhost");
     requests.push(url.pathname + url.search);
     res.setHeader("Content-Type", "application/json");
+
+    // The Census geocoder stand-in.
+    if (url.pathname === "/geocode") {
+      const query = (url.searchParams.get("address") ?? "").toUpperCase();
+      const entry = Object.entries(options.geocoder ?? {}).find(([key]) =>
+        query.startsWith(key.toUpperCase()),
+      );
+      res.end(
+        JSON.stringify({
+          result: {
+            addressMatches: entry
+              ? [{ matchedAddress: entry[0], coordinates: { x: entry[1][0], y: entry[1][1] } }]
+              : [],
+          },
+        }),
+      );
+      return;
+    }
 
     // ArcGIS Online: web map data.
     const webMap = /^\/sharing\/rest\/content\/items\/(?<id>[^/]+)\/data$/.exec(url.pathname);
@@ -153,8 +177,56 @@ function serve(
     return;
   }
   const where = url.searchParams.get("where") ?? "1=1";
-  const features = layer.features.filter((f) => matchesWhere(f.attributes, where));
+  let features = layer.features.filter((f) => matchesWhere(f.attributes, where));
+
+  const geometry = url.searchParams.get("geometry");
+  if (geometry) {
+    features = features.filter((f) => intersects(f.geometry, JSON.parse(geometry)));
+  }
   res.end(JSON.stringify({ features }));
+}
+
+/**
+ * A crude spatial filter: point-in-ring for a point query, bbox overlap for a
+ * polygon query. Enough to tell "inside a parcel" from "near a parcel", which
+ * is the distinction the app's fallback turns on.
+ */
+function intersects(geometry: unknown, filter: { x?: number; y?: number; rings?: number[][][] }): boolean {
+  const rings = (geometry as { rings?: number[][][] } | undefined)?.rings;
+  const paths = (geometry as { paths?: number[][][] } | undefined)?.paths;
+  const coords = rings?.[0] ?? paths?.[0];
+  if (!coords) return true;
+
+  if (typeof filter.x === "number" && typeof filter.y === "number") {
+    return rings ? pointInRing([filter.x, filter.y], coords) : true;
+  }
+  if (filter.rings) {
+    return bboxOverlaps(coords, filter.rings.flat());
+  }
+  return true;
+}
+
+function pointInRing(point: number[], ring: number[][]): boolean {
+  const [x, y] = point as [number, number];
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i] as [number, number];
+    const [xj, yj] = ring[j] as [number, number];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+function bboxOverlaps(a: number[][], b: number[][]): boolean {
+  const box = (pts: number[][]) => ({
+    minX: Math.min(...pts.map((p) => p[0]!)),
+    maxX: Math.max(...pts.map((p) => p[0]!)),
+    minY: Math.min(...pts.map((p) => p[1]!)),
+    maxY: Math.max(...pts.map((p) => p[1]!)),
+  });
+  const A = box(a);
+  const B = box(b);
+  return A.minX <= B.maxX && A.maxX >= B.minX && A.minY <= B.maxY && A.maxY >= B.minY;
 }
 
 /**

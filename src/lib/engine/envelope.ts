@@ -270,10 +270,7 @@ export function analyze(
       query,
       matched: site.matchedAddress,
       parcelId: site.parcel.parcelId,
-      matchMethod:
-        site.matchMethod === "parcel-address-field"
-          ? "Matched directly against the city parcel layer's address field."
-          : "Geocoded, then matched to the parcel the point falls inside.",
+      matchMethod: MATCH_METHOD_TEXT[site.matchMethod],
     },
     parcel: {
       lotAreaSf: {
@@ -318,6 +315,13 @@ export function analyze(
       })),
   };
 }
+
+const MATCH_METHOD_TEXT: Record<SiteData["matchMethod"], string> = {
+  "parcel-address-field": "Matched directly against the city parcel layer's address field.",
+  "geocode-point-in-parcel": "Geocoded, then matched to the parcel the point falls inside.",
+  "geocode-nearest-parcel":
+    "Geocoded to a point outside every parcel, then matched to the nearest one. Confirm it is the right lot.",
+};
 
 // --------------------------------------------------------------------------
 

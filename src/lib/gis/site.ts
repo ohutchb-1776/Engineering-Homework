@@ -19,8 +19,8 @@ import { resolveLayer, type ResolvedLayer } from "./discovery";
 import { GisError, getLayerInfo, queryLayer, sqlQuote, type GisFeature, type LayerInfo } from "./arcgis";
 import { asNumber, asString, readField, resolveField } from "./fields";
 import { geocodeAddress, inPortland } from "./geocode";
-import { normalizeAddress } from "./address";
-import type { LonLat } from "../geometry/project";
+import { normalizeAddress, withoutStreetSuffix } from "./address";
+import { makeProjector, type LonLat } from "../geometry/project";
 
 export interface SourceRecord {
   key: string;
@@ -65,7 +65,7 @@ export interface SiteData {
   /** Human-readable notes about what could not be determined. */
   gaps: string[];
   /** How the parcel was found. */
-  matchMethod: "parcel-address-field" | "geocode-point-in-parcel";
+  matchMethod: "parcel-address-field" | "geocode-point-in-parcel" | "geocode-nearest-parcel";
   matchedAddress: string;
 }
 
@@ -203,21 +203,40 @@ async function findParcel(
   const addressField = resolveField(parcelInfo.fields, "address");
 
   if (addressField) {
-    const where = `UPPER(${addressField}) LIKE ${sqlQuote(`${normalized}%`)}`;
-    const matches = await queryLayer(parcelUrl, { where, resultRecordCount: 25 });
+    // Two passes. The strict one is the typed address; the loose one drops the
+    // street suffix, because assessors record "5 MONUMENT SQ", "5 MONUMENT
+    // SQUARE" and "5 MONUMENT" interchangeably and no abbreviation table
+    // reconciles them.
+    const patterns = [normalized, withoutStreetSuffix(normalized)].filter(
+      (value): value is string => value !== null,
+    );
 
-    if (matches.length === 1) {
-      sources.push(okSource(parcelLayer, `matched on ${addressField}`));
-      return { feature: matches[0]!, method: "parcel-address-field" };
-    }
-    if (matches.length > 1) {
+    for (const pattern of patterns) {
+      const where = `UPPER(${addressField}) LIKE ${sqlQuote(`${pattern}%`)}`;
+      const matches = await queryLayer(parcelUrl, { where, resultRecordCount: 25 });
+      if (matches.length === 0) continue;
+
+      const detail =
+        pattern === normalized
+          ? `matched on ${addressField}`
+          : `matched on ${addressField} after dropping the street suffix`;
+
+      if (matches.length === 1) {
+        sources.push(okSource(parcelLayer, detail));
+        return { feature: matches[0]!, method: "parcel-address-field" };
+      }
+
       // Several records can share a street address (condominium units sharing
       // one lot). Identical geometry means it is really one parcel.
       const distinct = dedupeByGeometry(matches);
       if (distinct.length === 1) {
-        sources.push(okSource(parcelLayer, `matched on ${addressField}`));
+        sources.push(okSource(parcelLayer, detail));
         return { feature: distinct[0]!, method: "parcel-address-field" };
       }
+
+      // A loosened pattern matching several different lots is a real
+      // ambiguity ("5 MONUMENT" also matching "5 MONUMENT WAY"), so ask
+      // rather than pick.
       const labels = distinct
         .map((f) => asString(readField(f.properties, parcelInfo.fields, "address")))
         .filter((value): value is string => value !== null);
@@ -228,6 +247,15 @@ async function findParcel(
         [...new Set(labels)].slice(0, 12),
       );
     }
+
+    // Falling through to the geocoder is a worse answer, so say why it
+    // happened: either the field is the wrong one, or the assessor records
+    // this address differently. Naming the field is what distinguishes them.
+    gaps.push(
+      `No parcel's ${addressField} begins with ${patterns
+        .map((p) => `"${p}"`)
+        .join(" or ")}, so the address was geocoded instead. If that field is not the one holding street addresses, add the right name to FIELD_CANDIDATES in src/lib/gis/fields.ts.`,
+    );
   } else {
     gaps.push(
       "The parcel layer has no address field this app recognises, so the address was geocoded instead.",
@@ -256,17 +284,62 @@ async function findParcel(
     resultRecordCount: 5,
   });
 
-  if (atPoint.length === 0) {
-    sources.push({ ...okSource(parcelLayer), status: "empty" });
-    throw new SiteLookupError(
-      `"${normalized}" geocoded successfully but falls outside every mapped Portland parcel.`,
-      "not-found",
-      sources,
-    );
+  if (atPoint.length > 0) {
+    sources.push(okSource(parcelLayer, `matched by point from the ${hit.source}`));
+    return { feature: atPoint[0]!, method: "geocode-point-in-parcel" };
   }
 
-  sources.push(okSource(parcelLayer, `matched by point from the ${hit.source}`));
-  return { feature: atPoint[0]!, method: "geocode-point-in-parcel" };
+  // Addresses on squares, plazas, pedestrian ways and long private drives
+  // geocode to a point in the public right-of-way, which is not a parcel. The
+  // lot is still right there, so take the nearest one and say that we did.
+  const nearby = await queryLayer(parcelUrl, {
+    intersects: bufferBox(hit.point, NEAREST_PARCEL_SEARCH_DEGREES),
+    resultRecordCount: 50,
+  });
+  const nearest = nearestFeature(nearby, hit.point, NEAREST_PARCEL_MAX_FT);
+
+  if (nearest) {
+    sources.push(okSource(parcelLayer, `nearest parcel to the point from the ${hit.source}`));
+    gaps.push(
+      `"${normalized}" geocoded to a point that is not inside any parcel — usual for addresses on a square or other public way. The nearest parcel, about ${Math.round(
+        nearest.distanceFt,
+      )} ft away, was used instead. Check the map to confirm it is the right lot.`,
+    );
+    return { feature: nearest.feature, method: "geocode-nearest-parcel" };
+  }
+
+  sources.push({ ...okSource(parcelLayer), status: "empty" });
+  throw new SiteLookupError(
+    `"${normalized}" geocoded successfully, but no Portland parcel lies within ${NEAREST_PARCEL_MAX_FT} ft of it. Try the street address of the building rather than a square or landmark name.`,
+    "not-found",
+    sources,
+  );
+}
+
+/** Half-width of the box searched for a nearby parcel: roughly 300 ft. */
+const NEAREST_PARCEL_SEARCH_DEGREES = 0.0009;
+/** How far from the geocoded point a parcel may be and still be believable. */
+const NEAREST_PARCEL_MAX_FT = 300;
+
+/** The feature whose centroid is closest to `point`, within `maxFt`. */
+function nearestFeature(
+  features: GisFeature[],
+  point: LonLat,
+  maxFt: number,
+): { feature: GisFeature; distanceFt: number } | null {
+  const projector = makeProjector(point);
+  let best: { feature: GisFeature; distanceFt: number } | null = null;
+
+  for (const feature of features) {
+    if (!feature.geometry) continue;
+    const middle = centroid(feature as Feature<Polygon | MultiPolygon>).geometry.coordinates;
+    const [x, y] = projector.toFeet([middle[0]!, middle[1]!]);
+    const distanceFt = Math.hypot(x, y);
+    if (distanceFt <= maxFt && (best === null || distanceFt < best.distanceFt)) {
+      best = { feature, distanceFt };
+    }
+  }
+  return best;
 }
 
 async function lookupZoning(
