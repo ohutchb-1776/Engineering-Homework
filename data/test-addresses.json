@@ -1,0 +1,55 @@
+{
+  "note": "Real Portland, Maine addresses spread across district types, for manual checks and for scripts/gis-probe.ts. `expect` records what a maintainer should sanity-check, not an assertion the test suite makes — none of these have been confirmed against the city's records.",
+  "addresses": [
+    {
+      "address": "389 Congress St",
+      "label": "Portland City Hall",
+      "expect": "Downtown business district. A useful check that the downtown height overlay, not the base district figure, governs."
+    },
+    {
+      "address": "5 Monument Sq",
+      "label": "Portland Public Library",
+      "expect": "Dense peninsula commercial. Zero or near-zero setbacks; footprint should be governed by coverage, not yards."
+    },
+    {
+      "address": "155 Brackett St",
+      "label": "West End residential",
+      "expect": "R-6 high-density residential. Density should be governed by land area per dwelling unit."
+    },
+    {
+      "address": "94 Bedford St",
+      "label": "Near the University of Southern Maine",
+      "expect": "Institutional neighbourhood; check whether the district returned is in the rule dataset at all."
+    },
+    {
+      "address": "58 Fore St",
+      "label": "Eastern waterfront",
+      "expect": "Should trigger the shoreland overlay and probably a FEMA flood zone."
+    },
+    {
+      "address": "1 Bayside Ln",
+      "label": "Bayside",
+      "expect": "Mixed-use redevelopment area; a good test of the mixed-use districts."
+    },
+    {
+      "address": "212 Danforth St",
+      "label": "Danforth Street",
+      "expect": "Likely inside a local historic district, which should appear as a discretionary constraint."
+    },
+    {
+      "address": "1685 Forest Ave",
+      "label": "Riverton, off-peninsula",
+      "expect": "Lower-density mainland district with real front and rear yards; frontage detection should find the Forest Avenue centreline."
+    },
+    {
+      "address": "20 Island Ave",
+      "label": "Peaks Island",
+      "expect": "Island district. The state's unit minimum is 3 on islands rather than 4."
+    },
+    {
+      "address": "1000 Ocean Ave",
+      "label": "Near Baxter Woods",
+      "expect": "Check that a parcel adjoining open space does not pick up a spurious overlay."
+    }
+  ]
+}

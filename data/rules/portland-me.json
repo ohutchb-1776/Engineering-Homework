@@ -1,0 +1,1936 @@
+{
+  "jurisdiction": "Portland, Maine",
+  "version": "0.1.0",
+  "codeEdition": "ReCode Portland — Chapter 14 (Land Use), effective December 4, 2024",
+  "codeEffectiveDate": "2024-12-04",
+  "codeCitation": "portland-ch14",
+  "inclusionaryZoning": {
+    "unitThreshold": 10,
+    "citation": "portland-iz",
+    "summary": "Portland requires a share of the units in a development of 10 or more to be affordable, or a fee in lieu. It does not shrink the envelope, but it shapes what is worth building in it. Confirm the current percentage and income threshold with the city's Housing & Community Development office."
+  },
+  "disclaimer": "These values drive an early-stage feasibility estimate. They are not a zoning determination, a permit, or legal advice. Only the City of Portland Planning & Urban Development Department can tell you what may actually be built on a parcel.",
+  "provenance": {
+    "method": "District dimensional standards in this file were transcribed by hand and have NOT been read back against the published text of Chapter 14. The machine that generated them had no network route to portlandmaine.gov, library.municode.com or the city's GIS. The statewide statutory pathways (30-A M.R.S. ss 4364, 4364-A, 4364-B, 4364-E) were read from legislature.maine.gov and are marked 'verified'.",
+    "verifiedAgainstPrimarySource": false,
+    "warning": "Zoning numbers in this build have not been verified against the City of Portland's published code. Portland recodified its entire land use ordinance effective December 4, 2024, so district standards may differ from what is shown. Treat every figure as a starting point to check, not an answer. See docs/RULES.md for the verification procedure.",
+    "lastVerified": null
+  },
+  "citations": [
+    {
+      "id": "portland-ch14",
+      "document": "City of Portland, Maine — Code of Ordinances, Chapter 14 (Land Use)",
+      "section": "ch. 14",
+      "title": "Land Use",
+      "url": "https://www.portlandmaine.gov/city-code",
+      "edition": "ReCode Portland, effective 2024-12-04",
+      "checked": null
+    },
+    {
+      "id": "portland-ch14-residential",
+      "document": "City of Portland, Maine — Code of Ordinances, Chapter 14 (Land Use)",
+      "section": "ch. 14, residential district dimensional standards",
+      "title": "Residential zone dimensional requirements",
+      "url": "https://www.portlandmaine.gov/city-code",
+      "edition": "ReCode Portland, effective 2024-12-04",
+      "checked": null
+    },
+    {
+      "id": "portland-ch14-business",
+      "document": "City of Portland, Maine — Code of Ordinances, Chapter 14 (Land Use)",
+      "section": "ch. 14, business and mixed-use district dimensional standards",
+      "title": "Business zone dimensional requirements",
+      "url": "https://www.portlandmaine.gov/city-code",
+      "edition": "ReCode Portland, effective 2024-12-04",
+      "checked": null
+    },
+    {
+      "id": "portland-14-139",
+      "document": "City of Portland, Maine — Code of Ordinances, Chapter 14 (Land Use)",
+      "section": "Sec. 14-139(1)(b)(1)",
+      "title": "R-6 minimum land area per dwelling unit",
+      "url": "https://www.portlandmaine.gov/city-code",
+      "edition": "Pre-ReCode numbering; confirm the section survived the 2024 recodification.",
+      "checked": null
+    },
+    {
+      "id": "portland-parking-2023",
+      "document": "City of Portland, Maine — land use code amendment eliminating residential off-street parking minimums",
+      "section": "Council order, December 2023",
+      "title": "Parking minimums removed for residential uses",
+      "url": "https://www.portlandmaine.gov/city-code",
+      "edition": "Adopted December 2023",
+      "checked": null
+    },
+    {
+      "id": "portland-iz",
+      "document": "City of Portland, Maine — Inclusionary Zoning",
+      "section": "ch. 14, inclusionary zoning",
+      "title": "Inclusionary Zoning (IZ)",
+      "url": "https://www.portlandmaine.gov/267/Inclusionary-Zoning",
+      "edition": "IZ 2.0, as amended following the 2020 referendum",
+      "checked": null
+    },
+    {
+      "id": "portland-ch14-shoreland",
+      "document": "City of Portland, Maine — Code of Ordinances, Chapter 14 (Land Use), shoreland zoning",
+      "section": "ch. 14, shoreland overlay",
+      "title": "Shoreland Zone",
+      "url": "https://www.portlandmaine.gov/city-code",
+      "edition": "ReCode Portland, effective 2024-12-04",
+      "checked": null
+    },
+    {
+      "id": "portland-ch14-historic",
+      "document": "City of Portland, Maine — Code of Ordinances, Chapter 14, art. IX (Historic Preservation)",
+      "section": "ch. 14, art. IX",
+      "title": "Historic Preservation",
+      "url": "https://www.portlandmaine.gov/476/Historic-Preservation",
+      "edition": "As amended",
+      "checked": null
+    },
+    {
+      "id": "fema-nfhl",
+      "document": "FEMA National Flood Hazard Layer",
+      "section": "Flood Insurance Rate Map panel for the parcel",
+      "title": "NFHL",
+      "url": "https://msc.fema.gov/portal/home",
+      "edition": "Live service",
+      "checked": null
+    },
+    {
+      "id": "mrs-30a-4364",
+      "document": "Maine Revised Statutes, Title 30-A, §4364",
+      "section": "30-A M.R.S. §4364",
+      "title": "Affordable housing density",
+      "url": "https://legislature.maine.gov/statutes/30-a/title30-Asec4364.html",
+      "edition": "Current through the 2025 statutory compilation",
+      "checked": "2026-09-18"
+    },
+    {
+      "id": "mrs-30a-4364-a",
+      "document": "Maine Revised Statutes, Title 30-A, §4364-A",
+      "section": "30-A M.R.S. §4364-A",
+      "title": "Residential areas, generally; up to 4 dwelling units allowed",
+      "url": "https://legislature.maine.gov/statutes/30-A/title30-Asec4364-A-2.html",
+      "edition": "Current through the 2025 statutory compilation",
+      "checked": "2026-09-18"
+    },
+    {
+      "id": "mrs-30a-4364-b",
+      "document": "Maine Revised Statutes, Title 30-A, §4364-B",
+      "section": "30-A M.R.S. §4364-B",
+      "title": "Accessory dwelling units",
+      "url": "https://legislature.maine.gov/statutes/30-a/title30-Asec4364-B.html",
+      "edition": "Current through the 2025 statutory compilation",
+      "checked": "2026-09-18"
+    },
+    {
+      "id": "mrs-30a-4364-e",
+      "document": "Maine Revised Statutes, Title 30-A, §4364-E",
+      "section": "30-A M.R.S. §4364-E",
+      "title": "Residential units in areas zoned for commercial use",
+      "url": "https://legislature.maine.gov/legis/statutes/30-A/title30-Asec4364-E.html",
+      "edition": "Current through the 2025 statutory compilation",
+      "checked": "2026-09-18"
+    }
+  ],
+  "districts": [
+    {
+      "code": "R-1",
+      "name": "Low-Density Residential",
+      "category": "residential",
+      "multifamilyAllowed": {
+        "value": false,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 35,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": 6500,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "No land-area-per-unit density cap transcribed for this district."
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.2,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 25,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 8,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 25,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": 65,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": 0,
+        "source": "portland-parking-2023",
+        "confidence": "needs-verification",
+        "note": "Portland removed off-street parking minimums for residential uses citywide (Dec. 2023). Verify whether any minimum survives in this district."
+      },
+      "notes": [
+        "Detached single-family is the base permitted use. State law (30-A M.R.S. §4364-A) still requires that at least 3-4 units per lot be allowed where residential use is allowed — see the statewide pathway in the result."
+      ]
+    },
+    {
+      "code": "R-2",
+      "name": "Low-Density Residential",
+      "category": "residential",
+      "multifamilyAllowed": {
+        "value": false,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 35,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": 6000,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "No land-area-per-unit density cap transcribed for this district."
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.25,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 25,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 8,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 25,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": 60,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": 0,
+        "source": "portland-parking-2023",
+        "confidence": "needs-verification",
+        "note": "Portland removed off-street parking minimums for residential uses citywide (Dec. 2023). Verify whether any minimum survives in this district."
+      },
+      "notes": []
+    },
+    {
+      "code": "R-3",
+      "name": "Residential",
+      "category": "residential",
+      "multifamilyAllowed": {
+        "value": true,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 35,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": 6000,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": 3000,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.3,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 25,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 10,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 25,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": 60,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": 0,
+        "source": "portland-parking-2023",
+        "confidence": "needs-verification",
+        "note": "Portland removed off-street parking minimums for residential uses citywide (Dec. 2023). Verify whether any minimum survives in this district."
+      },
+      "notes": []
+    },
+    {
+      "code": "R-4",
+      "name": "Residential",
+      "category": "residential",
+      "multifamilyAllowed": {
+        "value": true,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 35,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": 6000,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": 2000,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.35,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 20,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 10,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 20,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": 55,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": 0,
+        "source": "portland-parking-2023",
+        "confidence": "needs-verification",
+        "note": "Portland removed off-street parking minimums for residential uses citywide (Dec. 2023). Verify whether any minimum survives in this district."
+      },
+      "notes": []
+    },
+    {
+      "code": "R-5",
+      "name": "Medium-Density Residential",
+      "category": "residential",
+      "multifamilyAllowed": {
+        "value": true,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 45,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": 6000,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": 1500,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.4,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 15,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 10,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 20,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": 50,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": 0,
+        "source": "portland-parking-2023",
+        "confidence": "needs-verification",
+        "note": "Portland removed off-street parking minimums for residential uses citywide (Dec. 2023). Verify whether any minimum survives in this district."
+      },
+      "notes": []
+    },
+    {
+      "code": "R-5A",
+      "name": "Medium-Density Residential",
+      "category": "residential",
+      "multifamilyAllowed": {
+        "value": true,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 45,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": 4500,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": 1200,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.45,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 15,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 10,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 20,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": 50,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": 0,
+        "source": "portland-parking-2023",
+        "confidence": "needs-verification",
+        "note": "Portland removed off-street parking minimums for residential uses citywide (Dec. 2023). Verify whether any minimum survives in this district."
+      },
+      "notes": []
+    },
+    {
+      "code": "R-6",
+      "name": "High-Density Residential",
+      "category": "residential",
+      "multifamilyAllowed": {
+        "value": true,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 45,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": 3000,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": 1000,
+        "source": "portland-14-139",
+        "confidence": "needs-verification"
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.5,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 10,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 8,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 20,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": 40,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": 0,
+        "source": "portland-parking-2023",
+        "confidence": "needs-verification",
+        "note": "Portland removed off-street parking minimums for residential uses citywide (Dec. 2023). Verify whether any minimum survives in this district."
+      },
+      "notes": [
+        "R-6 is Portland's densest residential district and covers much of the peninsula."
+      ]
+    },
+    {
+      "code": "R-7",
+      "name": "Island Residential",
+      "category": "island",
+      "multifamilyAllowed": {
+        "value": false,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 35,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "No land-area-per-unit density cap transcribed for this district."
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 25,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 10,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 25,
+          "source": "portland-ch14-residential",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": 0,
+        "source": "portland-parking-2023",
+        "confidence": "needs-verification",
+        "note": "Portland removed off-street parking minimums for residential uses citywide (Dec. 2023). Verify whether any minimum survives in this district."
+      },
+      "notes": [
+        "Island districts are subject to separate island standards and, on most islands, a 3-unit rather than 4-unit state minimum."
+      ]
+    },
+    {
+      "code": "RP",
+      "name": "Resource Protection",
+      "category": "other",
+      "multifamilyAllowed": {
+        "value": false,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "No numeric height cap transcribed for this district."
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "No land-area-per-unit density cap transcribed for this district."
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": null,
+          "source": "portland-ch14-residential",
+          "confidence": "not-stated"
+        },
+        "side": {
+          "value": null,
+          "source": "portland-ch14-residential",
+          "confidence": "not-stated"
+        },
+        "rear": {
+          "value": null,
+          "source": "portland-ch14-residential",
+          "confidence": "not-stated"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": null,
+        "source": "portland-parking-2023",
+        "confidence": "not-stated",
+        "note": "No residential parking standard applies: the district does not permit dwellings."
+      },
+      "notes": [
+        "Resource protection land. Residential development is generally not permitted; treat any envelope as zero."
+      ]
+    },
+    {
+      "code": "B-1",
+      "name": "Neighborhood Business",
+      "category": "business",
+      "multifamilyAllowed": {
+        "value": true,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 35,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": 1000,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.5,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 0,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 0,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 10,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": 0,
+        "source": "portland-parking-2023",
+        "confidence": "needs-verification",
+        "note": "Portland removed off-street parking minimums for residential uses citywide (Dec. 2023). Verify whether any minimum survives in this district."
+      },
+      "notes": []
+    },
+    {
+      "code": "B-2",
+      "name": "Community Business",
+      "category": "business",
+      "multifamilyAllowed": {
+        "value": true,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 45,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": 725,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.6,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 0,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 0,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 10,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": 0,
+        "source": "portland-parking-2023",
+        "confidence": "needs-verification",
+        "note": "Portland removed off-street parking minimums for residential uses citywide (Dec. 2023). Verify whether any minimum survives in this district."
+      },
+      "notes": []
+    },
+    {
+      "code": "B-2b",
+      "name": "Community Business",
+      "category": "business",
+      "multifamilyAllowed": {
+        "value": true,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 45,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": 725,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": 725,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.6,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 0,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 0,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 10,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": 0,
+        "source": "portland-parking-2023",
+        "confidence": "needs-verification",
+        "note": "Portland removed off-street parking minimums for residential uses citywide (Dec. 2023). Verify whether any minimum survives in this district."
+      },
+      "notes": []
+    },
+    {
+      "code": "B-3",
+      "name": "Downtown Business",
+      "category": "business",
+      "multifamilyAllowed": {
+        "value": true,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 65,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "No land-area-per-unit density cap transcribed for this district."
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 1.0,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 0,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 0,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 0,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": 0,
+        "source": "portland-parking-2023",
+        "confidence": "needs-verification",
+        "note": "Portland removed off-street parking minimums for residential uses citywide (Dec. 2023). Verify whether any minimum survives in this district."
+      },
+      "notes": [
+        "The downtown core is governed by a mapped height overlay; large parts of B-3 allow substantially more than the base figure here. The overlay height, where the GIS returns one, takes precedence."
+      ]
+    },
+    {
+      "code": "B-4",
+      "name": "General Business",
+      "category": "business",
+      "multifamilyAllowed": {
+        "value": true,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 45,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": 1000,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.6,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 0,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 0,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 10,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": 0,
+        "source": "portland-parking-2023",
+        "confidence": "needs-verification",
+        "note": "Portland removed off-street parking minimums for residential uses citywide (Dec. 2023). Verify whether any minimum survives in this district."
+      },
+      "notes": []
+    },
+    {
+      "code": "B-5",
+      "name": "Urban Commercial Mixed Use",
+      "category": "mixed-use",
+      "multifamilyAllowed": {
+        "value": true,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 65,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "No land-area-per-unit density cap transcribed for this district."
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.8,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 0,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 0,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 10,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": 0,
+        "source": "portland-parking-2023",
+        "confidence": "needs-verification",
+        "note": "Portland removed off-street parking minimums for residential uses citywide (Dec. 2023). Verify whether any minimum survives in this district."
+      },
+      "notes": []
+    },
+    {
+      "code": "B-6",
+      "name": "Mixed Development",
+      "category": "mixed-use",
+      "multifamilyAllowed": {
+        "value": true,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 45,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": 1000,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.6,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 10,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 10,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 15,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": 0,
+        "source": "portland-parking-2023",
+        "confidence": "needs-verification",
+        "note": "Portland removed off-street parking minimums for residential uses citywide (Dec. 2023). Verify whether any minimum survives in this district."
+      },
+      "notes": []
+    },
+    {
+      "code": "B-7",
+      "name": "Bayside Mixed Use",
+      "category": "mixed-use",
+      "multifamilyAllowed": {
+        "value": true,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 65,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "No land-area-per-unit density cap transcribed for this district."
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.85,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 0,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 0,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 0,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": 0,
+        "source": "portland-parking-2023",
+        "confidence": "needs-verification",
+        "note": "Portland removed off-street parking minimums for residential uses citywide (Dec. 2023). Verify whether any minimum survives in this district."
+      },
+      "notes": []
+    },
+    {
+      "code": "I-B",
+      "name": "Industrial / Business Park",
+      "category": "industrial",
+      "multifamilyAllowed": {
+        "value": false,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 45,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "No land-area-per-unit density cap transcribed for this district."
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.5,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 25,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 20,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 20,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": null,
+        "source": "portland-parking-2023",
+        "confidence": "not-stated",
+        "note": "No residential parking standard applies: the district does not permit dwellings."
+      },
+      "notes": []
+    },
+    {
+      "code": "I-L",
+      "name": "Limited Industrial",
+      "category": "industrial",
+      "multifamilyAllowed": {
+        "value": false,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 45,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "No land-area-per-unit density cap transcribed for this district."
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.5,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 25,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 20,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 20,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": null,
+        "source": "portland-parking-2023",
+        "confidence": "not-stated",
+        "note": "No residential parking standard applies: the district does not permit dwellings."
+      },
+      "notes": []
+    },
+    {
+      "code": "I-M",
+      "name": "Moderate Impact Industrial",
+      "category": "industrial",
+      "multifamilyAllowed": {
+        "value": false,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 60,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "No land-area-per-unit density cap transcribed for this district."
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.6,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 25,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 20,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 20,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": null,
+        "source": "portland-parking-2023",
+        "confidence": "not-stated",
+        "note": "No residential parking standard applies: the district does not permit dwellings."
+      },
+      "notes": []
+    },
+    {
+      "code": "I-H",
+      "name": "Heavy Impact Industrial",
+      "category": "industrial",
+      "multifamilyAllowed": {
+        "value": false,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 60,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "No land-area-per-unit density cap transcribed for this district."
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.6,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 25,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 20,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 20,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": null,
+        "source": "portland-parking-2023",
+        "confidence": "not-stated",
+        "note": "No residential parking standard applies: the district does not permit dwellings."
+      },
+      "notes": []
+    },
+    {
+      "code": "OP",
+      "name": "Office Park",
+      "category": "business",
+      "multifamilyAllowed": {
+        "value": false,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": 45,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "No land-area-per-unit density cap transcribed for this district."
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": 0.5,
+        "source": "portland-ch14-business",
+        "confidence": "needs-verification"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": 25,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "side": {
+          "value": 20,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        },
+        "rear": {
+          "value": 20,
+          "source": "portland-ch14-business",
+          "confidence": "needs-verification"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": null,
+        "source": "portland-ch14-business",
+        "confidence": "not-stated"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": null,
+        "source": "portland-parking-2023",
+        "confidence": "not-stated",
+        "note": "No residential parking standard applies: the district does not permit dwellings."
+      },
+      "notes": []
+    },
+    {
+      "code": "ROS",
+      "name": "Recreation and Open Space",
+      "category": "other",
+      "multifamilyAllowed": {
+        "value": false,
+        "source": "portland-ch14-residential",
+        "confidence": "needs-verification"
+      },
+      "maxHeightFt": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "No numeric height cap transcribed for this district."
+      },
+      "maxStories": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District controls height in feet, not stories."
+      },
+      "minLotAreaSf": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated"
+      },
+      "minLotAreaPerDwellingSf": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "No land-area-per-unit density cap transcribed for this district."
+      },
+      "maxFar": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated",
+        "note": "District does not use a floor area ratio cap."
+      },
+      "maxLotCoverageRatio": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated"
+      },
+      "minYardsFt": {
+        "front": {
+          "value": null,
+          "source": "portland-ch14-residential",
+          "confidence": "not-stated"
+        },
+        "side": {
+          "value": null,
+          "source": "portland-ch14-residential",
+          "confidence": "not-stated"
+        },
+        "rear": {
+          "value": null,
+          "source": "portland-ch14-residential",
+          "confidence": "not-stated"
+        }
+      },
+      "minStreetFrontageFt": {
+        "value": null,
+        "source": "portland-ch14-residential",
+        "confidence": "not-stated"
+      },
+      "parkingSpacesPerDwelling": {
+        "value": null,
+        "source": "portland-parking-2023",
+        "confidence": "not-stated",
+        "note": "No residential parking standard applies: the district does not permit dwellings."
+      },
+      "notes": [
+        "Parks and open space. No residential envelope is calculated."
+      ]
+    }
+  ],
+  "overlays": [
+    {
+      "id": "shoreland",
+      "name": "Shoreland Overlay Zone",
+      "kind": "setback",
+      "citation": "portland-ch14-shoreland",
+      "description": "Land within 250 ft of Casco Bay, a great pond or a coastal wetland, or within 75 ft of a stream. State-mandated shoreland zoning applies on top of the base district: a 75-100 ft structure setback from the water, a 20 ft height ceiling in some resource-protection subdistricts, and DEP-reviewed standards for vegetation and impervious surface.",
+      "effect": {
+        "additionalSetbackFt": {
+          "value": 75,
+          "source": "portland-ch14-shoreland",
+          "confidence": "needs-verification",
+          "note": "The water-body setback applies only to the shoreward side of the lot. The calculator applies it as an inward offset on every edge inside the overlay, which is deliberately conservative."
+        },
+        "maxLotCoverageRatioCap": {
+          "value": 0.2,
+          "source": "portland-ch14-shoreland",
+          "confidence": "needs-verification",
+          "note": "Shoreland districts cap impervious/structure coverage well below the base district."
+        }
+      },
+      "triggersDiscretionaryReview": true
+    },
+    {
+      "id": "stream-protection",
+      "name": "Stream Protection Overlay",
+      "kind": "setback",
+      "citation": "portland-ch14-shoreland",
+      "description": "Land within 75 ft of a mapped stream. Structures must be set back from the stream channel and vegetation removal is restricted.",
+      "effect": {
+        "additionalSetbackFt": {
+          "value": 75,
+          "source": "portland-ch14-shoreland",
+          "confidence": "needs-verification",
+          "note": "Applied conservatively as an inward offset on every edge inside the overlay."
+        }
+      },
+      "triggersDiscretionaryReview": true
+    },
+    {
+      "id": "coastal-stability",
+      "name": "Coastal Stability / Bluff Overlay",
+      "kind": "review",
+      "citation": "portland-ch14-shoreland",
+      "description": "Mapped coastal bluff or unstable slope. Building here requires geotechnical review and may be prohibited near the bluff edge.",
+      "effect": {},
+      "triggersDiscretionaryReview": true
+    },
+    {
+      "id": "historic-district",
+      "name": "Historic District or Landmark",
+      "kind": "review",
+      "citation": "portland-ch14-historic",
+      "description": "The parcel is in a locally designated historic district or holds a landmark structure. Height, massing, materials and demolition are decided by the Historic Preservation Board, not by the dimensional table. A conforming envelope is frequently not approvable at full height here.",
+      "effect": {},
+      "triggersDiscretionaryReview": true
+    },
+    {
+      "id": "flood-zone-ae",
+      "name": "FEMA Special Flood Hazard Area",
+      "kind": "informational",
+      "citation": "fema-nfhl",
+      "description": "The parcel is in a mapped 1%-annual-chance floodplain. The lowest floor must be elevated to or above the base flood elevation, which consumes height budget: in Portland, height is measured from average grade, so freeboard normally comes out of the habitable stories rather than being added on top.",
+      "effect": {},
+      "triggersDiscretionaryReview": false
+    },
+    {
+      "id": "downtown-height",
+      "name": "Downtown Height Overlay",
+      "kind": "height-cap",
+      "citation": "portland-ch14",
+      "description": "The peninsula's mapped height districts set the controlling maximum height downtown, overriding the base district figure. Where the GIS returns a numeric height for this overlay it is used directly.",
+      "effect": {},
+      "triggersDiscretionaryReview": false
+    },
+    {
+      "id": "airport-approach",
+      "name": "Airport Approach / Obstruction Surface",
+      "kind": "review",
+      "citation": "portland-ch14",
+      "description": "The parcel is under a Portland International Jetport approach or transitional surface. FAA Part 77 notice and an obstruction evaluation may cap height well below the zoning figure.",
+      "effect": {},
+      "triggersDiscretionaryReview": true
+    }
+  ],
+  "statutePathways": [
+    {
+      "id": "me-4364-a-units",
+      "name": "Maine 4-unit minimum (30-A M.R.S. §4364-A)",
+      "description": "Where residential use is allowed, a municipality must allow at least 3 dwelling units per lot, and 4 units per lot if the lot is in a designated growth area or served by public water and sewer. Portland implemented this in December 2023 by allowing up to 4 units on mainland residential lots and 3 on island lots, with no off-street parking required for those units.",
+      "source": "mrs-30a-4364-a",
+      "confidence": "verified",
+      "minUnitsAllowed": 4,
+      "conditions": [
+        "Lot is in an area where residential use is allowed.",
+        "4 units (rather than 3) requires a designated growth area or public water and sewer — nearly all of mainland Portland qualifies, but confirm for the specific parcel.",
+        "Island lots are limited to 3 units."
+      ]
+    },
+    {
+      "id": "me-4364-affordable",
+      "name": "Affordable housing density and height bonus (30-A M.R.S. §4364)",
+      "description": "A municipality must allow an affordable housing development to exceed any municipal height restriction by no less than one story or 14 feet, must allow at least 2.5x the base dwelling-unit density where multifamily dwellings are allowed, and may not require more than 2 off-street parking spaces per 3 units.",
+      "source": "mrs-30a-4364",
+      "confidence": "verified",
+      "densityMultiplier": 2.5,
+      "conditions": [
+        "The project must qualify as an affordable housing development under the statute.",
+        "The site must be in a designated growth area, or served by a public/district water system and a comparable sewer system.",
+        "The 2.5x density floor applies only where multifamily dwellings are already allowed.",
+        "This is a statutory floor. Portland's own bonus provisions may allow more."
+      ]
+    },
+    {
+      "id": "me-4364-b-adu",
+      "name": "Accessory dwelling units (30-A M.R.S. §4364-B)",
+      "description": "Municipalities must allow at least one accessory dwelling unit on a lot with a single-family dwelling, subject to limited local standards.",
+      "source": "mrs-30a-4364-b",
+      "confidence": "verified",
+      "conditions": [
+        "Applies to lots with an existing or proposed single-family dwelling.",
+        "Counts toward, rather than on top of, the §4364-A unit minimums."
+      ]
+    },
+    {
+      "id": "me-4364-e-commercial",
+      "name": "Housing in commercial zones (30-A M.R.S. §4364-E)",
+      "description": "Residential units must be allowed in areas zoned for commercial use, subject to the statute's conditions.",
+      "source": "mrs-30a-4364-e",
+      "confidence": "verified",
+      "conditions": [
+        "Applies to areas zoned to allow commercial use.",
+        "Confirm how Portland has implemented the section for the specific district."
+      ]
+    }
+  ]
+}

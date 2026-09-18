@@ -1,0 +1,42 @@
+{
+  "name": "portland-height",
+  "version": "0.1.0",
+  "private": true,
+  "description": "How tall can you build? Apartment-envelope estimator for Portland, Maine parcels.",
+  "engines": {
+    "node": ">=20.9"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "rules:lint": "node --import tsx scripts/rules-lint.ts",
+    "gis:probe": "node --import tsx scripts/gis-probe.ts",
+    "check": "npm run rules:lint && npm run typecheck && npm run test && npm run lint"
+  },
+  "dependencies": {
+    "@esri/arcgis-to-geojson-utils": "^1.3.0",
+    "@turf/area": "^7.2.0",
+    "@turf/centroid": "^7.2.0",
+    "maplibre-gl": "^6.10.0",
+    "next": "^16.3.5",
+    "polygon-clipping": "^0.15.7",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "^16.3.5",
+    "tailwindcss": "^4",
+    "tsx": "^4.20.0",
+    "typescript": "^5"
+  }
+}
