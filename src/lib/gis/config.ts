@@ -73,6 +73,19 @@ export interface LayerSpec {
   fallbackIndex?: number;
   /** ArcGIS Online item ids to fall back to, in order. */
   agolItems?: string[];
+  /**
+   * The geometry the layer must have. A layer called "Parcel Labels" or
+   * "Development Review Parcels" can match by name and still be points, or a
+   * subset — this rejects the first kind outright.
+   */
+  requireGeometry?: "esriGeometryPolygon" | "esriGeometryPolyline" | "esriGeometryPoint";
+  /**
+   * Consult the city's published web map BEFORE the candidate list. For the
+   * parcel layer this matters: the Parcel Viewer is by definition the city's
+   * complete parcel fabric, whereas a candidate named "Development_Review_
+   * Parcels" resolves happily and is only the parcels under review.
+   */
+  preferWebMap?: boolean;
 }
 
 const portland = (service: string): string[] =>
@@ -84,21 +97,57 @@ export const LAYER_SPECS: LayerSpec[] = [
     label: "City of Portland parcels",
     required: true,
     envVar: "PORTLAND_PARCEL_LAYER",
+    preferWebMap: true,
+    requireGeometry: "esriGeometryPolygon",
     candidates: [
-      ...portland("Development_Review_Parcels/MapServer"),
       ...portland("Parcels/MapServer"),
+      ...portland("Parcels/FeatureServer"),
       ...portland("Assessing/MapServer"),
+      ...portland("Assessor/MapServer"),
+      ...portland("Property/MapServer"),
+      ...portland("Cadastral/MapServer"),
+      ...portland("Basemap/MapServer"),
+      ...portland("Base/MapServer"),
+      // Last, on purpose: this is the parcels under development review, which
+      // is a subset. It is better than nothing and worse than anything else.
+      ...portland("Development_Review_Parcels/MapServer"),
       ...portland("Development_Review_Parcels/FeatureServer"),
     ],
-    layerNames: ["parcel", "property", "lot"],
-    fallbackIndex: 0,
+    // "tax parcel" and "parcels" before "parcel", so a layer literally named
+    // "Parcels" beats "Parcel Labels" or "Parcel Lines".
+    layerNames: ["tax parcels", "tax parcel", "parcels", "parcel boundaries", "parcel", "property", "lots"],
+    excludeNames: ["label", "line", "annotation", "point", "review", "history", "historic", "retired"],
     agolItems: [MAINE_STATEWIDE_PARCELS_ITEM],
+  },
+  {
+    /**
+     * The city's own address points (E911 / master address). A point placed
+     * on the building is a far better way to find a lot than a national
+     * geocoder that interpolates along the street, and it is what makes an
+     * address on a square resolve at all.
+     */
+    key: "addressPoints",
+    label: "City of Portland address points",
+    required: false,
+    envVar: "PORTLAND_ADDRESS_POINTS_LAYER",
+    requireGeometry: "esriGeometryPoint",
+    candidates: [
+      ...portland("Addresses/MapServer"),
+      ...portland("Address_Points/MapServer"),
+      ...portland("AddressPoints/MapServer"),
+      ...portland("E911/MapServer"),
+      ...portland("E911_Addresses/MapServer"),
+      ...portland("Basemap/MapServer"),
+    ],
+    layerNames: ["address point", "address points", "addresses", "e911", "site address", "address"],
+    excludeNames: ["range", "label", "annotation"],
   },
   {
     key: "zoning",
     label: "City of Portland zoning districts",
     required: true,
     envVar: "PORTLAND_ZONING_LAYER",
+    requireGeometry: "esriGeometryPolygon",
     candidates: [
       ...portland("Zoning/MapServer"),
       ...portland("Zoning/FeatureServer"),
@@ -149,6 +198,7 @@ export const LAYER_SPECS: LayerSpec[] = [
     label: "Street centerlines",
     required: false,
     envVar: "PORTLAND_STREETS_LAYER",
+    requireGeometry: "esriGeometryPolyline",
     candidates: [
       ...portland("transportation/Streets/MapServer"),
       ...portland("Streets/MapServer"),

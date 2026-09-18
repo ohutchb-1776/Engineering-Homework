@@ -10,6 +10,7 @@ Root: `https://gis.portlandmaine.gov/maps/rest/services`
 | Layer | Used for | Required |
 |---|---|---|
 | Parcels | Parcel boundary, address, parcel id, lot area | yes |
+| Address points | Placing a typed address on its lot (before the Census geocoder) | no |
 | Base zoning districts | The zoning district | yes |
 | Overlay zones | Mapped overlays | no |
 | Shoreland overlay | Shoreland setbacks and coverage cap | no |
@@ -24,13 +25,20 @@ usually still returns *something*. Instead `src/lib/gis/discovery.ts` resolves
 each layer at run time:
 
 1. the layer's environment variable, if set, used verbatim;
-2. each candidate service in `src/lib/gis/config.ts`, whose layer list is
+2. for parcels, the city's Parcel Viewer web map — it is by definition the
+   complete fabric, whereas a guessed service such as
+   `Development_Review_Parcels` is only the parcels under review;
+3. each candidate service in `src/lib/gis/config.ts`, whose layer list is
    searched **by name**, with exclusions — `"Shoreland Overlay Zone"` contains
    `"overlay zone"`, so the generic overlay layer must be stopped from
    resolving to it;
-3. the operational layers of the city's published ArcGIS Online web map, which
+4. the operational layers of the city's published ArcGIS Online web map, which
    the city maintains, so a renamed or relocated service fixes itself;
-4. for parcels only, Maine GeoLibrary's statewide layer.
+5. for parcels only, Maine GeoLibrary's statewide layer.
+
+Every name match is checked against the geometry the layer must have
+(polygons for parcels and zoning, lines for streets, points for addresses),
+so a layer that merely *sounds* right is rejected with the reason recorded.
 
 Successful resolutions are cached for an hour; failures are always retried, so
 a brief outage does not pin the app to "broken". Everything tried, and why each

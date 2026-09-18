@@ -42,6 +42,27 @@ export const FIELD_CANDIDATES = {
   landUse: ["LAND_USE", "LANDUSE", "USE_CODE", "PROPERTY_USE", "STATE_CLASS"],
   floodZone: ["FLD_ZONE", "ZONE_SUBTY", "FLOOD_ZONE", "SFHA_TF"],
   streetName: ["STREET_NAME", "STREETNAME", "FULL_NAME", "NAME", "ST_NAME", "STREET"],
+  /**
+   * Assessor layers often split the address: a number field and a street
+   * field, with no combined one. These two are only used on the parcel layer,
+   * where "NAME" would be the owner and must not be treated as the street.
+   */
+  houseNumber: [
+    "ST_NUM",
+    "STREET_NUM",
+    "STREETNUM",
+    "STREET_NUMBER",
+    "ST_NUMBER",
+    "HOUSE_NUM",
+    "HOUSENUM",
+    "HOUSE_NUMBER",
+    "ADDR_NUM",
+    "ADDRNUM",
+    "BLDG_NUM",
+    "NUMBER",
+    "NUM",
+  ],
+  parcelStreet: ["ST_NAME", "STREET_NAME", "STREETNAME", "STREET", "ADDR_STREET", "STNAME", "ST"],
 } as const;
 
 export type FieldConcept = keyof typeof FIELD_CANDIDATES;

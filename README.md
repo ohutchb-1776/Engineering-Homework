@@ -48,10 +48,11 @@ verification pass before anyone relies on a number.**
 0. Finds the city's GIS layers, by searching candidate services and matching
    layers by **name** rather than by index, then falling back to the ArcGIS
    Online web map the city publishes.
-1. Resolves the address against the City of Portland parcel layer: the
-   layer's own address field first (loosening the street suffix if the strict
-   match misses), then the US Census geocoder and a point-in-parcel query,
-   then the nearest parcel within 300 ft — because an address on a square or
+1. Resolves the address against the City of Portland parcel layer: a
+   combined address field first (loosening the street suffix if the strict
+   match misses), then separate number + street fields, then the city's own
+   address points, then the US Census geocoder with a point-in-parcel query,
+   then the nearest parcel within 500 ft — because an address on a square or
    other public way geocodes into the right-of-way and lands inside no parcel
    at all. Every loosening is reported, never silent.
 2. Measures the lot from the mapped boundary.
@@ -168,6 +169,15 @@ The page is a server component; the address lives in the URL, so results are
 shareable and the back button works. The form is a plain `GET` form and needs
 no JavaScript. The only client component is the map.
 
+**The parcel layer is taken from the city's Parcel Viewer web map first.**
+A service named `Development_Review_Parcels` resolves happily by name and is
+only the parcels under development review — a subset that produced "no parcel
+within 300 ft of Monument Square", which is impossible against the real
+fabric. So for parcels the city's published viewer wins over any guessed
+service, every name match is checked for the right geometry (a "Parcel
+Labels" point layer is not a parcel layer), and review/label/line layers are
+excluded outright.
+
 **Endpoints are discovered, not hardcoded.** A municipal GIS layer's index
 changes whenever the service is republished, so `.../Zoning/MapServer/5`
 becomes wrong without warning — and the failure is worse than a crash, because
@@ -189,7 +199,7 @@ src/lib/engine/               the calculation and its explanation trace
 src/app/                      the page, the JSON API, and /diagnostics
 scripts/gis-probe.ts          where every layer resolves, on the command line
 scripts/rules-lint.ts         dataset integrity and verification status
-tests/                        105 tests, no network
+tests/                        109 tests, no network
 ```
 
 ### Why there is no LLM
@@ -202,7 +212,7 @@ you add one later, it should read the trace and never the code.
 
 ### Tests
 
-105 tests, no network access required.
+109 tests, no network access required.
 
 ```
 tests/geometry.test.ts   setback clipping, frontage detection, projection accuracy

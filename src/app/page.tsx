@@ -47,6 +47,31 @@ export default async function Page({
               ))}
             </ul>
           ) : null}
+          {outcome.gaps || outcome.sources ? (
+            <details className="mt-3 text-sm">
+              <summary className="cursor-pointer text-[color:var(--color-muted)]">
+                What the lookup found before it failed
+              </summary>
+              {outcome.gaps ? (
+                <ul className="mt-2 flex list-disc flex-col gap-1 pl-5 text-[color:var(--color-muted)]">
+                  {outcome.gaps.map((gap) => (
+                    <li key={gap}>{gap}</li>
+                  ))}
+                </ul>
+              ) : null}
+              {outcome.sources ? (
+                <ul className="mt-2 flex flex-col gap-1 font-mono text-xs text-[color:var(--color-muted)]">
+                  {outcome.sources.map((source) => (
+                    <li key={`${source.key}-${source.url}-${source.status}`} className="break-all">
+                      {source.status} · {source.label}
+                      {source.url ? ` · ${source.url}` : ""}
+                      {source.detail ? ` · ${source.detail}` : ""}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </details>
+          ) : null}
           {outcome.kind === "upstream" ? (
             <p className="mt-3 text-sm text-[color:var(--color-muted)]">
               This means the City of Portland&rsquo;s GIS could not be reached from this server.{" "}

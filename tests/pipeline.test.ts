@@ -77,6 +77,7 @@ before(async () => {
     parcels: parcelLayer,
     zoning: zoningLayer,
     overlays: emptyLayer("Overlays"),
+    empty: emptyLayer("Empty"),
     shoreland: {
       ...emptyLayer("Shoreland"),
       features: [{ attributes: { NAME: "Shoreland Overlay Zone" } }],
@@ -114,6 +115,11 @@ before(async () => {
   // config.ts reads the environment when it is first imported, so the
   // endpoints have to be set before anything pulls it in.
   process.env.PORTLAND_PARCEL_LAYER = `${server.url}/parcels`;
+  // Keep every discovery attempt inside the fake server, so nothing reaches
+  // for the real city GIS from a unit test.
+  process.env.PORTLAND_GIS_ROOT = server.url;
+  process.env.AGOL_SHARING_URL = `${server.url}/sharing/rest`;
+  process.env.PORTLAND_ADDRESS_POINTS_LAYER = `${server.url}/empty`;
   process.env.PORTLAND_ZONING_LAYER = `${server.url}/zoning`;
   process.env.PORTLAND_OVERLAY_LAYER = `${server.url}/overlays`;
   process.env.PORTLAND_SHORELAND_LAYER = `${server.url}/shoreland`;

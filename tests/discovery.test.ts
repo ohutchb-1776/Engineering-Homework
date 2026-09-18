@@ -32,7 +32,11 @@ const agolItems: Record<string, { url?: string; title?: string }> = {
 };
 const agolWebMaps: Record<string, { operationalLayers: { title: string; url?: string }[] }> = {
   "city-webmap": {
-    operationalLayers: [{ title: "Basemap" }, { title: "Base Zoning Districts" }],
+    operationalLayers: [
+      { title: "Basemap" },
+      { title: "Base Zoning Districts" },
+      { title: "Tax Parcels" },
+    ],
   },
 };
 
@@ -40,6 +44,9 @@ before(async () => {
   server = await startFakeArcgis(
     {
       parcels: layer("Parcels", "PROP_LOC"),
+      parcelLabels: { ...layer("Parcel Labels", "LABEL"), geometryType: "esriGeometryPoint" },
+      reviewParcels: layer("Development Review Parcels", "PROP_LOC"),
+      viewerParcels: layer("Tax Parcels", "PROP_LOC"),
       zoning: layer("Base Zoning Districts", "ZONE_"),
       shoreland: layer("Shoreland Overlay Zone", "NAME"),
       statewide: layer("Maine Parcels", "PROP_LOC"),
@@ -55,7 +62,14 @@ before(async () => {
           ],
         },
         "Development_Review_Parcels/MapServer": {
-          layers: [{ id: 0, name: "Parcels", serves: "parcels" }],
+          // Labels are points and come first; the polygon layer must win.
+          layers: [
+            { id: 0, name: "Parcel Labels", serves: "parcelLabels" },
+            { id: 1, name: "Parcels", serves: "parcels" },
+          ],
+        },
+        "ParcelViewer/MapServer": {
+          layers: [{ id: 4, name: "Tax Parcels", serves: "viewerParcels" }],
         },
         // A service that exists but is broken, to prove we move past it.
         "Parcels/MapServer": { layers: [], fail: 503 },
@@ -76,6 +90,7 @@ before(async () => {
   // the server is listening is enough.
   agolItems["statewide-item"]!.url = `${server.url}/Statewide/MapServer`;
   agolWebMaps["city-webmap"]!.operationalLayers[1]!.url = `${server.url}/Zoning_2027/MapServer/3`;
+  agolWebMaps["city-webmap"]!.operationalLayers[2]!.url = `${server.url}/ParcelViewer/MapServer/4`;
 
   process.env.AGOL_SHARING_URL = `${server.url}/sharing/rest`;
   process.env.PORTLAND_GIS_ROOT = server.url;
@@ -134,10 +149,41 @@ describe("resolveLayer", () => {
     assert.equal(resolved.url, `${server.url}/Zoning/MapServer/0`);
   });
 
-  it("moves past a service that is down and uses the next candidate", async () => {
+  it("prefers the city's Parcel Viewer web map for parcels over any candidate", async () => {
     const resolved = await discovery.resolveLayer(config.LAYER_SPEC_BY_KEY.parcels!);
-    assert.equal(resolved.url, `${server.url}/Development_Review_Parcels/MapServer/0`);
-    assert.ok(resolved.attempts.length >= 1);
+    assert.equal(resolved.via, "web-map");
+    assert.equal(resolved.url, `${server.url}/ParcelViewer/MapServer/4`);
+  });
+
+  it("moves past a service that is down and uses the next candidate", async () => {
+    const resolved = await discovery.resolveLayer({
+      ...config.LAYER_SPEC_BY_KEY.parcels!,
+      key: "parcels-no-webmap",
+      preferWebMap: false,
+      layerNames: ["parcels", "parcel"],
+      agolItems: [],
+    });
+    assert.equal(resolved.via, "candidate");
+    assert.equal(resolved.url, `${server.url}/Development_Review_Parcels/MapServer/1`);
+    assert.ok(resolved.attempts.some((a) => a.url.includes("Parcels/MapServer")));
+  });
+
+  it("rejects a name match with the wrong geometry and keeps looking", async () => {
+    const resolved = await discovery.resolveLayer({
+      key: "parcels-geometry",
+      label: "x",
+      required: true,
+      envVar: "UNUSED",
+      candidates: [`${server.url}/Development_Review_Parcels/MapServer`],
+      layerNames: ["parcel"],
+      requireGeometry: "esriGeometryPolygon",
+    });
+    // "Parcel Labels" (index 0) matches first by name but is points.
+    assert.equal(resolved.url, `${server.url}/Development_Review_Parcels/MapServer/1`);
+    assert.ok(
+      resolved.attempts.some((a) => /Parcel Labels.*esriGeometryPoint/.test(a.outcome)),
+      "the rejected layer must be recorded with the reason",
+    );
   });
 
   it("records every endpoint it tried, so a failure can be diagnosed", async () => {

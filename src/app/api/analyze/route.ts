@@ -12,7 +12,13 @@ export async function GET(request: Request): Promise<Response> {
 
   if (!outcome.ok) {
     return Response.json(
-      { error: outcome.message, kind: outcome.kind, candidates: outcome.candidates },
+      {
+        error: outcome.message,
+        kind: outcome.kind,
+        candidates: outcome.candidates,
+        sources: outcome.sources,
+        gaps: outcome.gaps,
+      },
       { status: httpStatusFor(outcome.kind) },
     );
   }

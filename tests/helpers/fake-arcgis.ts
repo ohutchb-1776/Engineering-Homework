@@ -230,20 +230,31 @@ function bboxOverlaps(a: number[][], b: number[][]): boolean {
 }
 
 /**
- * Understands only `1=1` and the one shape the app builds:
- * `UPPER(FIELD) LIKE 'VALUE%'`. Anything else throws, so a change to the SQL
- * cannot silently pass the test.
+ * Understands only `1=1` and the shapes the app builds, joined by AND:
+ *   UPPER(FIELD) LIKE 'VALUE%'
+ *   FIELD = 5            FIELD = 'text'
+ * Anything else throws, so a change to the SQL cannot silently pass the test.
  */
 function matchesWhere(attributes: Record<string, unknown>, where: string): boolean {
   if (where === "1=1") return true;
+  return where.split(" AND ").every((clause) => matchesClause(attributes, clause.trim()));
+}
 
-  const like = /^UPPER\((?<field>\w+)\) LIKE '(?<value>.*)%'$/.exec(where);
-  const field = like?.groups?.field;
-  const value = like?.groups?.value;
-  if (field === undefined || value === undefined) {
-    throw new Error(`fake ArcGIS cannot parse WHERE clause: ${where}`);
+function matchesClause(attributes: Record<string, unknown>, clause: string): boolean {
+  const like = /^UPPER\((?<field>\w+)\) LIKE '(?<value>.*)%'$/.exec(clause);
+  if (like?.groups?.field !== undefined && like.groups.value !== undefined) {
+    const actual = String(attributes[like.groups.field] ?? "").toUpperCase();
+    return actual.startsWith(like.groups.value.replace(/''/g, "'"));
   }
 
-  const actual = String(attributes[field] ?? "").toUpperCase();
-  return actual.startsWith(value.replace(/''/g, "'"));
+  const equals = /^(?<field>\w+) = (?:'(?<text>.*)'|(?<num>-?\d+(?:\.\d+)?))$/.exec(clause);
+  if (equals?.groups?.field !== undefined) {
+    const actual = attributes[equals.groups.field];
+    if (equals.groups.text !== undefined) {
+      return String(actual ?? "") === equals.groups.text.replace(/''/g, "'");
+    }
+    return Number(actual) === Number(equals.groups.num);
+  }
+
+  throw new Error(`fake ArcGIS cannot parse WHERE clause: ${clause}`);
 }

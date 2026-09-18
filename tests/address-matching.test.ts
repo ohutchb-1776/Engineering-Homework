@@ -53,6 +53,36 @@ const parcels: FakeLayer = {
   ],
 };
 
+/** A layer with the address split into number + street and no combined field. */
+const splitParcels: FakeLayer = {
+  name: "Split Parcels",
+  geometryType: "esriGeometryPolygon",
+  fields: [
+    { name: "ST_NUM", type: "esriFieldTypeInteger" },
+    { name: "ST_NAME", type: "esriFieldTypeString" },
+    { name: "CBL", type: "esriFieldTypeString" },
+  ],
+  features: [
+    {
+      attributes: { ST_NUM: 5, ST_NAME: "MONUMENT SQ", CBL: "SPLIT-5" },
+      geometry: { rings: [ring(ADJACENT_LOT[0], ADJACENT_LOT[1])] },
+    },
+  ],
+};
+
+/** City address points: one placed on the lot for 1 Monument Sq. */
+const addressPoints: FakeLayer = {
+  name: "Address Points",
+  geometryType: "esriGeometryPoint",
+  fields: [{ name: "FULL_ADDRESS", type: "esriFieldTypeString" }],
+  features: [
+    {
+      attributes: { FULL_ADDRESS: "1 MONUMENT SQ" },
+      geometry: { x: ADJACENT_LOT[0], y: ADJACENT_LOT[1] },
+    },
+  ],
+};
+
 let server: FakeArcgis;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let runAnalysis: (address: string) => Promise<any>;
@@ -61,6 +91,8 @@ before(async () => {
   server = await startFakeArcgis(
     {
       parcels,
+      splitParcels,
+      addressPoints,
       zoning: {
         name: "Zoning",
         geometryType: "esriGeometryPolygon",
@@ -86,6 +118,11 @@ before(async () => {
   );
 
   process.env.PORTLAND_PARCEL_LAYER = `${server.url}/parcels`;
+  // Keep every discovery attempt inside the fake server, so nothing reaches
+  // for the real city GIS from a unit test.
+  process.env.PORTLAND_GIS_ROOT = server.url;
+  process.env.AGOL_SHARING_URL = `${server.url}/sharing/rest`;
+  process.env.PORTLAND_ADDRESS_POINTS_LAYER = `${server.url}/empty`;
   process.env.PORTLAND_ZONING_LAYER = `${server.url}/zoning`;
   for (const key of [
     "PORTLAND_OVERLAY_LAYER",
@@ -164,7 +201,7 @@ describe("an address that geocodes onto a public square", () => {
     const outcome = await runAnalysis("1 Offshore Rd");
     assert.equal(outcome.ok, false);
     assert.equal(outcome.kind, "not-found");
-    assert.match(outcome.message, /within 300 ft/);
+    assert.match(outcome.message, /within 500 ft/);
   });
 });
 
@@ -174,5 +211,48 @@ describe("when the address field misses", () => {
     const gap = outcome.result.gaps.find((g: string) => g.includes("PROP_LOC"));
     assert.ok(gap, "the failed field comparison must be reported");
     assert.match(gap, /geocoded instead/);
+  });
+});
+
+
+describe("a parcel layer with separate number and street fields", () => {
+  it("matches on number + street when there is no combined address field", async () => {
+    process.env.PORTLAND_PARCEL_LAYER = `${server.url}/splitParcels`;
+    const { resetDiscoveryCache } = await import("../src/lib/gis/discovery");
+    resetDiscoveryCache();
+    try {
+      const outcome = await runAnalysis("5 Monument Square");
+      assert.equal(outcome.ok, true, outcome.ok ? "" : outcome.message);
+      assert.equal(outcome.result.address.parcelId, "SPLIT-5");
+      const src = outcome.result.sources.find((s: { key: string }) => s.key === "parcels");
+      assert.match(src.detail, /ST_NUM \+ ST_NAME/);
+    } finally {
+      process.env.PORTLAND_PARCEL_LAYER = `${server.url}/parcels`;
+      resetDiscoveryCache();
+    }
+  });
+});
+
+describe("city address points", () => {
+  it("are used to place an address before falling back to the national geocoder", async () => {
+    process.env.PORTLAND_ADDRESS_POINTS_LAYER = `${server.url}/addressPoints`;
+    const { resetDiscoveryCache } = await import("../src/lib/gis/discovery");
+    resetDiscoveryCache();
+    try {
+      // The Census stand-in puts 1 Monument Sq in the plaza; the city point is
+      // on the lot, so this must resolve as a direct point-in-parcel hit.
+      const outcome = await runAnalysis("1 Monument Sq");
+      assert.equal(outcome.ok, true, outcome.ok ? "" : outcome.message);
+      assert.equal(outcome.result.address.parcelId, "028 A001");
+      assert.match(outcome.result.address.matchMethod, /falls inside/);
+      assert.ok(
+        outcome.result.sources.some(
+          (s: { key: string; status: string }) => s.key === "addressPoints" && s.status === "ok",
+        ),
+      );
+    } finally {
+      process.env.PORTLAND_ADDRESS_POINTS_LAYER = `${server.url}/empty`;
+      resetDiscoveryCache();
+    }
   });
 });

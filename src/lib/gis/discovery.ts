@@ -87,6 +87,13 @@ async function discover(spec: LayerSpec): Promise<ResolvedLayer> {
     return { ...base(spec), url: override, via: "env", attempts };
   }
 
+  if (spec.preferWebMap) {
+    const fromWebMap = await searchWebMap(PORTLAND_PARCEL_VIEWER_ITEM, spec, attempts);
+    if (fromWebMap) {
+      return { ...base(spec), url: fromWebMap.url, via: "web-map", serverName: fromWebMap.name, attempts };
+    }
+  }
+
   for (const candidate of dedupe(spec.candidates)) {
     const found = await searchService(candidate, spec, attempts);
     if (found) {
@@ -94,9 +101,11 @@ async function discover(spec: LayerSpec): Promise<ResolvedLayer> {
     }
   }
 
-  const fromWebMap = await searchWebMap(PORTLAND_PARCEL_VIEWER_ITEM, spec, attempts);
-  if (fromWebMap) {
-    return { ...base(spec), url: fromWebMap.url, via: "web-map", serverName: fromWebMap.name, attempts };
+  if (!spec.preferWebMap) {
+    const fromWebMap = await searchWebMap(PORTLAND_PARCEL_VIEWER_ITEM, spec, attempts);
+    if (fromWebMap) {
+      return { ...base(spec), url: fromWebMap.url, via: "web-map", serverName: fromWebMap.name, attempts };
+    }
   }
 
   for (const item of spec.agolItems ?? []) {
@@ -136,6 +145,14 @@ async function searchService(
 
     // Already a layer.
     if (Array.isArray(body.fields) && body.fields.length > 0) {
+      const geometry = (body as { geometryType?: string }).geometryType;
+      if (spec.requireGeometry && geometry !== spec.requireGeometry) {
+        attempts.push({
+          url,
+          outcome: `layer "${body.name ?? "?"}" is ${geometry ?? "not spatial"}, need ${spec.requireGeometry}`,
+        });
+        return null;
+      }
       attempts.push({ url, outcome: `ok — layer "${body.name ?? "?"}"` });
       return { url, name: body.name ?? spec.key };
     }
@@ -146,20 +163,35 @@ async function searchService(
       return null;
     }
 
-    const matched = matchLayerByName(layers, spec.layerNames, spec.excludeNames);
-    if (matched) {
+    // Several layers may match by name; take the first whose geometry is
+    // right. "Parcels" (polygons) and "Parcel Labels" (points) both contain
+    // "parcel", and only one of them can answer "which lot is this point in".
+    const ranked = rankLayersByName(layers, spec.layerNames, spec.excludeNames);
+    for (const matched of ranked) {
+      const layerUrl = `${url}/${matched.id}`;
+      const geometryProblem = await geometryMismatch(layerUrl, spec);
+      if (geometryProblem) {
+        attempts.push({ url: layerUrl, outcome: `"${matched.name}" ${geometryProblem}` });
+        continue;
+      }
       attempts.push({ url, outcome: `ok — matched "${matched.name}" at index ${matched.id}` });
-      return { url: `${url}/${matched.id}`, name: matched.name };
+      return { url: layerUrl, name: matched.name };
     }
 
     if (spec.fallbackIndex !== undefined) {
       const byIndex = layers.find((l) => l.id === spec.fallbackIndex);
       if (byIndex) {
+        const layerUrl = `${url}/${byIndex.id}`;
+        const geometryProblem = await geometryMismatch(layerUrl, spec);
+        if (geometryProblem) {
+          attempts.push({ url: layerUrl, outcome: `fallback index ${byIndex.id} ${geometryProblem}` });
+          return null;
+        }
         attempts.push({
           url,
           outcome: `no name matched; fell back to index ${spec.fallbackIndex} ("${byIndex.name}")`,
         });
-        return { url: `${url}/${byIndex.id}`, name: byIndex.name };
+        return { url: layerUrl, name: byIndex.name };
       }
     }
 
@@ -174,6 +206,49 @@ async function searchService(
     attempts.push({ url, outcome: error instanceof GisError ? error.message : String(error) });
     return null;
   }
+}
+
+/**
+ * "" when the layer's geometry is acceptable, otherwise a short reason.
+ * Costs one request, which is cheap next to answering the wrong question.
+ */
+async function geometryMismatch(layerUrl: string, spec: LayerSpec): Promise<string> {
+  if (!spec.requireGeometry) return "";
+  try {
+    const info = await getLayerInfo(layerUrl);
+    if (info.geometryType === spec.requireGeometry) return "";
+    return `is ${info.geometryType ?? "not spatial"}, need ${spec.requireGeometry}`;
+  } catch (error) {
+    return `could not be read: ${error instanceof GisError ? error.message : String(error)}`;
+  }
+}
+
+/**
+ * Every layer that matches, best first. Exact matches on earlier names rank
+ * above partial matches on later ones.
+ */
+export function rankLayersByName<T extends { id: number; name: string }>(
+  layers: readonly T[],
+  wanted: readonly string[],
+  excluded: readonly string[] = [],
+): T[] {
+  const allowed = layers.filter((layer) => {
+    const name = layer.name.toLowerCase();
+    return !excluded.some((bad) => name.includes(bad.toLowerCase()));
+  });
+  const out: T[] = [];
+  const push = (layer: T) => {
+    if (!out.includes(layer)) out.push(layer);
+  };
+  for (const want of wanted) {
+    const needle = want.toLowerCase();
+    allowed.filter((l) => l.name.toLowerCase() === needle).forEach(push);
+  }
+  for (const want of wanted) {
+    const needle = want.toLowerCase();
+    allowed.filter((l) => l.name.toLowerCase().includes(needle)).forEach(push);
+  }
+  return out;
 }
 
 /**
@@ -235,8 +310,20 @@ async function searchWebMap(
         allowed.find((l) => l.title.toLowerCase() === needle) ??
         allowed.find((l) => l.title.toLowerCase().includes(needle));
       if (hit?.url) {
+        const target = /\/\d+$/.test(hit.url) ? hit.url : null;
+        if (!target) {
+          // A service root rather than a layer: search inside it.
+          const inside = await searchService(hit.url, spec, attempts);
+          if (inside) return inside;
+          continue;
+        }
+        const geometryProblem = await geometryMismatch(target, spec);
+        if (geometryProblem) {
+          attempts.push({ url: target, outcome: `web map layer "${hit.title}" ${geometryProblem}` });
+          continue;
+        }
         attempts.push({ url, outcome: `ok — web map layer "${hit.title}"` });
-        return { url: hit.url, name: hit.title };
+        return { url: target, name: hit.title };
       }
     }
 

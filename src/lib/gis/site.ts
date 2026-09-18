@@ -18,8 +18,8 @@ import { LAYER_SPEC_BY_KEY } from "./config";
 import { resolveLayer, type ResolvedLayer } from "./discovery";
 import { GisError, getLayerInfo, queryLayer, sqlQuote, type GisFeature, type LayerInfo } from "./arcgis";
 import { asNumber, asString, readField, resolveField } from "./fields";
-import { geocodeAddress, inPortland } from "./geocode";
-import { normalizeAddress, withoutStreetSuffix } from "./address";
+import { geocodeAddress, inPortland, type GeocodeHit } from "./geocode";
+import { houseNumberOf, normalizeAddress, withoutStreetSuffix } from "./address";
 import { makeProjector, type LonLat } from "../geometry/project";
 
 export interface SourceRecord {
@@ -75,6 +75,8 @@ export class SiteLookupError extends Error {
     readonly kind: "not-found" | "ambiguous" | "upstream",
     readonly sources: SourceRecord[] = [],
     readonly candidates: string[] = [],
+    /** Everything the lookup learned before it failed. Shown, so the next fix is informed. */
+    readonly gaps: string[] = [],
   ) {
     super(message);
     this.name = "SiteLookupError";
@@ -256,19 +258,26 @@ async function findParcel(
         .map((p) => `"${p}"`)
         .join(" or ")}, so the address was geocoded instead. If that field is not the one holding street addresses, add the right name to FIELD_CANDIDATES in src/lib/gis/fields.ts.`,
     );
-  } else {
+  }
+
+  const split = await findParcelBySplitFields(normalized, parcelLayer, parcelInfo, sources);
+  if (split) return { feature: split, method: "parcel-address-field" };
+
+  if (!addressField) {
     gaps.push(
       "The parcel layer has no address field this app recognises, so the address was geocoded instead.",
     );
   }
 
-  const hit = await geocodeAddress(normalized);
+  const hit = (await geocodeWithAddressPoints(normalized, sources, gaps)) ?? (await geocodeAddress(normalized));
   if (!hit) {
     sources.push({ ...okSource(parcelLayer), status: "empty" });
     throw new SiteLookupError(
       `No Portland parcel matched "${normalized}". Check the street number and spelling.`,
       "not-found",
       sources,
+      [],
+      gaps,
     );
   }
   if (!inPortland(hit.point)) {
@@ -316,10 +325,105 @@ async function findParcel(
   );
 }
 
-/** Half-width of the box searched for a nearby parcel: roughly 300 ft. */
-const NEAREST_PARCEL_SEARCH_DEGREES = 0.0009;
+/** Half-width of the box searched for a nearby parcel: roughly 500 ft. */
+const NEAREST_PARCEL_SEARCH_DEGREES = 0.0015;
 /** How far from the geocoded point a parcel may be and still be believable. */
-const NEAREST_PARCEL_MAX_FT = 300;
+const NEAREST_PARCEL_MAX_FT = 500;
+
+/**
+ * Match on separate number and street fields, which many assessor layers use
+ * instead of one combined address. The street is matched as a prefix on its
+ * stem ("MONUMENT" for "MONUMENT SQ") so suffix spelling cannot get in the
+ * way; the number is matched exactly, typed to suit the field.
+ */
+async function findParcelBySplitFields(
+  normalized: string,
+  parcelLayer: ResolvedLayer,
+  parcelInfo: LayerInfo,
+  sources: SourceRecord[],
+): Promise<GisFeature | null> {
+  const numberField = resolveField(parcelInfo.fields, "houseNumber");
+  const streetField = resolveField(parcelInfo.fields, "parcelStreet");
+  const number = houseNumberOf(normalized);
+  if (!numberField || !streetField || !number) return null;
+
+  const stem = (withoutStreetSuffix(normalized) ?? normalized).split(" ").slice(1).join(" ");
+  if (stem.length === 0) return null;
+
+  const numberType = parcelInfo.fields.find((f) => f.name === numberField)?.type ?? "";
+  const numberIsText = /String/i.test(numberType);
+  const numberLiteral = numberIsText ? sqlQuote(number) : String(Number.parseInt(number, 10));
+  if (!numberIsText && !/^\d+$/.test(number)) return null;
+
+  const where = `UPPER(${streetField}) LIKE ${sqlQuote(`${stem}%`)} AND ${numberField} = ${numberLiteral}`;
+  const matches = dedupeByGeometry(
+    await queryLayer(parcelLayer.url!, { where, resultRecordCount: 25 }),
+  );
+  if (matches.length === 0) return null;
+
+  sources.push(okSource(parcelLayer, `matched on ${numberField} + ${streetField}`));
+  return matches[0]!;
+}
+
+/**
+ * Geocode with the city's own address points, if a layer was found. A point
+ * the city placed on the building beats a national geocoder interpolating
+ * along the street, and it is what makes an address on a square land on the
+ * lot rather than in the plaza.
+ */
+async function geocodeWithAddressPoints(
+  normalized: string,
+  sources: SourceRecord[],
+  gaps: string[],
+): Promise<GeocodeHit | null> {
+  const layer = await locate("addressPoints");
+  if (!layer.url) return null;
+
+  try {
+    const info = await getLayerInfo(layer.url);
+    const addressField = resolveField(info.fields, "address");
+    const numberField = resolveField(info.fields, "houseNumber");
+    const streetField = resolveField(info.fields, "parcelStreet") ?? resolveField(info.fields, "streetName");
+    const number = houseNumberOf(normalized);
+    const stem = (withoutStreetSuffix(normalized) ?? normalized).split(" ").slice(1).join(" ");
+
+    const clauses: string[] = [];
+    if (addressField) {
+      clauses.push(`UPPER(${addressField}) LIKE ${sqlQuote(`${normalized}%`)}`);
+      const loose = withoutStreetSuffix(normalized);
+      if (loose) clauses.push(`UPPER(${addressField}) LIKE ${sqlQuote(`${loose}%`)}`);
+    }
+    if (numberField && streetField && number && stem) {
+      const numberType = info.fields.find((f) => f.name === numberField)?.type ?? "";
+      const literal = /String/i.test(numberType) ? sqlQuote(number) : String(Number.parseInt(number, 10));
+      if (/String/i.test(numberType) || /^\d+$/.test(number)) {
+        clauses.push(`UPPER(${streetField}) LIKE ${sqlQuote(`${stem}%`)} AND ${numberField} = ${literal}`);
+      }
+    }
+    if (clauses.length === 0) {
+      sources.push({ ...okSource(layer), status: "empty", detail: "no address fields recognised" });
+      return null;
+    }
+
+    for (const where of clauses) {
+      const points = await queryLayer(layer.url, { where, resultRecordCount: 5 });
+      const point = points.find((f) => f.geometry?.type === "Point");
+      if (point && point.geometry?.type === "Point") {
+        const [x, y] = point.geometry.coordinates;
+        if (typeof x === "number" && typeof y === "number" && inPortland([x, y])) {
+          sources.push(okSource(layer, "address point located"));
+          return { matchedAddress: normalized, point: [x, y], source: "city address points" };
+        }
+      }
+    }
+    sources.push({ ...okSource(layer), status: "empty" });
+    return null;
+  } catch (error) {
+    sources.push(failedSource(layer, error));
+    gaps.push("The city address-point layer could not be read, so a national geocoder was used instead.");
+    return null;
+  }
+}
 
 /** The feature whose centroid is closest to `point`, within `maxFt`. */
 function nearestFeature(

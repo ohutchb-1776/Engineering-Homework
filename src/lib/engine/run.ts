@@ -12,6 +12,9 @@ export interface AnalysisFailure {
   message: string;
   /** Candidate addresses when the query matched more than one parcel. */
   candidates?: string[];
+  /** What was learned before failing: which layers answered, what was tried. */
+  sources?: import("../gis/site").SourceRecord[];
+  gaps?: string[];
 }
 
 export type AnalysisOutcome = { ok: true; result: AnalysisResult } | AnalysisFailure;
@@ -32,6 +35,8 @@ export async function runAnalysis(address: string): Promise<AnalysisOutcome> {
         kind: error.kind,
         message: error.message,
         candidates: error.candidates.length > 0 ? error.candidates : undefined,
+        sources: error.sources.length > 0 ? error.sources : undefined,
+        gaps: error.gaps.length > 0 ? error.gaps : undefined,
       };
     }
     return {
