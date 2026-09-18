@@ -108,6 +108,8 @@ export interface AnalysisResult {
     districtName: string | null;
     /** True when the district was found in the rule dataset. */
     districtKnown: boolean;
+    /** District family the standards came from, e.g. "residential". */
+    family: string;
   };
   overlays: { id: string | null; name: string; description: string | null }[];
   scenarios: Scenario[];

@@ -58,6 +58,31 @@ private drives geocode into the public right-of-way, which is not a parcel.
 The lot is still adjacent, so the nearest one is used — and the result says so
 and asks you to confirm on the map. Beyond 300 ft the app gives up instead.
 
+## Estimating when the district's own standard is unavailable
+
+**An estimate is always produced.** The tool's purpose is a hypothetical, so
+"not determined" is never the answer for height, footprint, floor area or
+units. When a parcel's own standard is missing — the district is not in the
+rule dataset, the zoning layer returned nothing, or the district's table
+leaves the value blank — the value comes from **family defaults** in
+`data/rules/portland-me.json` (`estimateDefaults`), chosen by the district's
+family: residential, mixed-use, business, industrial, institutional, island,
+other, or unknown. The family is inferred from Portland's district naming
+pattern (`R-*` residential, `B-*` business, `I-*` industrial, `IR-*` island…).
+
+Every figure taken from a default is labelled **our assumption** on screen,
+the trace names each estimated field, and a constraint says which district
+was unrecognised and how to add it. A district that *is* in the dataset and
+states no density cap keeps that — only an unknown district borrows one.
+
+**The community-need pathway is always shown** alongside the base estimate:
+what state law (30-A M.R.S. §4364) obliges the city to allow for an
+affordable housing development — at least one storey or 14 ft more, 2.5× the
+density. It applies only if the project qualifies, and the page says so.
+
+**A lot the setbacks swallow entirely** is still estimated, at its coverage
+cap, with a blocking constraint saying a dimensional variance would be needed.
+
 ## Rule-application assumptions
 
 **The most restrictive rule governs.** Where the base district, an overlay, and
@@ -78,8 +103,8 @@ supports.** It is the softest number in the result and is presented that way.
 into the base answer.** It applies only if a project actually qualifies under
 30-A M.R.S. §4364, which is not something the app can determine.
 
-**A missing rule produces "not determined", never a default.** If a district is
-not in the rule dataset, the app declines to produce an envelope at all.
+**A missing rule produces a labelled estimate, never a silent default.** See
+the section above: the number always appears, and its badge says what it is.
 
 ## What "best" means here
 

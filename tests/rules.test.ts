@@ -115,6 +115,7 @@ describe("rule dataset", () => {
     for (const p of ruleSet.statutePathways) referenced.add(p.source);
     referenced.add(ruleSet.codeCitation);
     referenced.add(ruleSet.inclusionaryZoning.citation);
+    referenced.add(ruleSet.estimateDefaults.citation);
 
     for (const c of ruleSet.citations) {
       assert.ok(referenced.has(c.id), `citation "${c.id}" is never used`);
@@ -147,6 +148,33 @@ describe("rule dataset", () => {
       assert.equal(p.confidence, "verified", `${p.id} should be read from the statute itself`);
       assert.ok(p.conditions.length > 0, `${p.id} states no conditions`);
     }
+  });
+});
+
+describe("estimating defaults", () => {
+  const families = ["residential", "mixed-use", "business", "industrial", "institutional", "island", "other", "unknown"];
+
+  it("cover every district family, plus unknown", () => {
+    for (const family of families) {
+      assert.ok(ruleSet.estimateDefaults.families[family as keyof typeof ruleSet.estimateDefaults.families], `missing family ${family}`);
+    }
+  });
+
+  it("are complete and physically sane, so an estimate can always be produced", () => {
+    for (const [family, d] of Object.entries(ruleSet.estimateDefaults.families)) {
+      assert.ok(d.maxHeightFt > 0 && d.maxHeightFt <= 300, `${family} height`);
+      assert.ok(d.maxLotCoverageRatio > 0 && d.maxLotCoverageRatio <= 1, `${family} coverage`);
+      for (const key of ["front", "side", "rear"] as const) {
+        assert.ok(d.minYardsFt[key] >= 0 && d.minYardsFt[key] <= 100, `${family} ${key} yard`);
+      }
+      if (d.minLotAreaPerDwellingSf !== null) assert.ok(d.minLotAreaPerDwellingSf > 0, `${family} density`);
+      assert.equal(typeof d.multifamilyAllowed, "boolean");
+      assert.ok(d.rationale.length > 40, `${family} needs a rationale a reader can argue with`);
+    }
+  });
+
+  it("cite something a reader can open", () => {
+    assert.ok(findCitation(ruleSet.estimateDefaults.citation));
   });
 });
 

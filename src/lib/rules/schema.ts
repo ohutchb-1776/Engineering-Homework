@@ -164,6 +164,30 @@ export interface InclusionaryZoning {
   summary: string;
 }
 
+/** Typical standards for one family of districts, used only as a fallback. */
+export interface FamilyDefaults {
+  maxHeightFt: number;
+  maxStories: number | null;
+  maxLotCoverageRatio: number;
+  minYardsFt: { front: number; side: number; rear: number };
+  minLotAreaPerDwellingSf: number | null;
+  multifamilyAllowed: boolean;
+  /** Why these numbers, in a sentence a reader can argue with. */
+  rationale: string;
+}
+
+export type DistrictFamily = DistrictCategory | "unknown";
+
+/**
+ * What the calculator uses when a parcel's own standard is unavailable, so
+ * that an answer is always produced — labelled as an estimate, never as law.
+ */
+export interface EstimateDefaults {
+  citation: string;
+  note: string;
+  families: Record<DistrictFamily, FamilyDefaults>;
+}
+
 /** The whole rule dataset. */
 export interface RuleSet {
   jurisdiction: string;
@@ -180,6 +204,7 @@ export interface RuleSet {
   inclusionaryZoning: InclusionaryZoning;
   provenance: Provenance;
   citations: Citation[];
+  estimateDefaults: EstimateDefaults;
   districts: DistrictRules[];
   overlays: OverlayRules[];
   statutePathways: StatutePathway[];

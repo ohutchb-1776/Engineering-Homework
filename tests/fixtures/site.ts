@@ -112,6 +112,8 @@ export function fakeSite(options: FakeSiteOptions = {}): SiteData {
       districtCode,
       districtName: null,
       mappedMaxHeightFt,
+      rawValues: districtCode ? [districtCode] : [],
+      method: districtCode ? "parcel" : "none",
     },
     overlays,
     streetLines: withStreet ? [streetSouthOf(PORTLAND_ORIGIN, 20)] : [],

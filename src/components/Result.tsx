@@ -38,7 +38,16 @@ export function Result({ result }: { result: AnalysisResult }) {
         subtitle={base.premise}
       >
         <dl className="grid grid-cols-1 gap-px overflow-hidden rounded-lg bg-[color:var(--color-line)] sm:grid-cols-2">
-          <Cell label="Zoning district" value={result.zoning.districtCode ?? "unknown"} hint={result.zoning.districtName ?? undefined} />
+          <Cell
+            label="Zoning district"
+            value={result.zoning.districtCode ?? `${result.zoning.family} (estimated)`}
+            basis={result.zoning.districtKnown ? "gis" : "assumption"}
+            hint={
+              result.zoning.districtKnown
+                ? (result.zoning.districtName ?? undefined)
+                : `Not in the rule dataset; ${result.zoning.family}-family standards used as an estimate.`
+            }
+          />
           <Cell label="Lot area" value={formatFigure(result.parcel.lotAreaSf)} basis="gis" />
           <Cell label="Maximum footprint" value={formatFigure(base.envelope.maxFootprintSf)} basis={base.envelope.maxFootprintSf.basis} hint={base.envelope.maxFootprintSf.why} />
           <Cell label="Gross floor area" value={formatFigure(base.envelope.grossFloorAreaSf)} basis={base.envelope.grossFloorAreaSf.basis} hint={base.envelope.grossFloorAreaSf.why} />

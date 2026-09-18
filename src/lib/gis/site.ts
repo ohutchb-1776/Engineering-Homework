@@ -57,6 +57,10 @@ export interface SiteData {
     districtName: string | null;
     /** Height published on the zoning layer itself, if any. Beats the table. */
     mappedMaxHeightFt: number | null;
+    /** Every string attribute on the zoning polygon, for loose matching. */
+    rawValues: string[];
+    /** How the district was found: on the parcel, or the nearest polygon. */
+    method: "parcel" | "centroid" | "nearest" | "none";
   };
   overlays: OverlayHit[];
   /** Street centrelines near the parcel, in WGS84, for frontage detection. */
@@ -122,7 +126,7 @@ export async function lookupSite(rawAddress: string): Promise<SiteData> {
   const recordedAreaSf = readRecordedArea(polygon.properties, parcelInfo);
 
   const [zoning, overlays, streetLines] = await Promise.all([
-    lookupZoning(centre, sources, gaps),
+    lookupZoning(polygon.geometry, centre, sources, gaps),
     lookupOverlays(polygon.geometry, sources, gaps),
     lookupStreets(centre, sources, gaps),
   ]);
@@ -446,7 +450,16 @@ function nearestFeature(
   return best;
 }
 
+const NO_ZONING: SiteData["zoning"] = {
+  districtCode: null,
+  districtName: null,
+  mappedMaxHeightFt: null,
+  rawValues: [],
+  method: "none",
+};
+
 async function lookupZoning(
+  parcelGeometry: Polygon | MultiPolygon,
   centre: LonLat,
   sources: SourceRecord[],
   gaps: string[],
@@ -455,36 +468,68 @@ async function lookupZoning(
   if (!layer.url) {
     sources.push(unresolvedSource(layer));
     gaps.push(
-      "The city zoning layer could not be found on any known endpoint, so the district could not be determined.",
+      "The city zoning layer could not be found on any known endpoint, so the district was estimated rather than read.",
     );
-    return { districtCode: null, districtName: null, mappedMaxHeightFt: null };
+    return NO_ZONING;
   }
 
   try {
     const info = await getLayerInfo(layer.url);
-    const features = await queryLayer(layer.url, {
-      intersects: { type: "Point", coordinates: [centre[0], centre[1]] },
-      returnGeometry: false,
-      resultRecordCount: 5,
-    });
 
-    if (features.length === 0) {
-      sources.push({ ...okSource(layer), status: "empty" });
-      gaps.push("No zoning district polygon covers this parcel's centre point.");
-      return { districtCode: null, districtName: null, mappedMaxHeightFt: null };
+    // Three tries, each wider than the last: polygons intersecting the lot
+    // (the usual case), the lot's centre point (concave lots), then anything
+    // within about 200 ft (lots the zoning map leaves a sliver around).
+    const attempts: { method: SiteData["zoning"]["method"]; geometry: Geometry }[] = [
+      { method: "parcel", geometry: parcelGeometry },
+      { method: "centroid", geometry: { type: "Point", coordinates: [centre[0], centre[1]] } },
+      { method: "nearest", geometry: bufferBox(centre, 0.0006) },
+    ];
+
+    for (const attempt of attempts) {
+      const features = await queryLayer(layer.url, {
+        intersects: attempt.geometry,
+        returnGeometry: false,
+        resultRecordCount: 10,
+      });
+      if (features.length === 0) continue;
+
+      // Several districts can touch a lot; the most frequent one governs.
+      const counts = new Map<string, { n: number; attributes: Record<string, unknown> }>();
+      for (const feature of features) {
+        const code =
+          asString(readField(feature.properties, info.fields, "zoningDistrict")) ??
+          asString(readField(feature.properties, info.fields, "zoningName")) ??
+          JSON.stringify(feature.properties);
+        const entry = counts.get(code) ?? { n: 0, attributes: feature.properties };
+        entry.n += 1;
+        counts.set(code, entry);
+      }
+      const attributes = [...counts.values()].sort((a, b) => b.n - a.n)[0]!.attributes;
+
+      sources.push(okSource(layer, attempt.method === "parcel" ? undefined : `matched by ${attempt.method}`));
+      if (attempt.method === "nearest") {
+        gaps.push(
+          "No zoning polygon covers this parcel; the nearest district was used. Confirm it on the city's zoning map.",
+        );
+      }
+      return {
+        districtCode: asString(readField(attributes, info.fields, "zoningDistrict")),
+        districtName: asString(readField(attributes, info.fields, "zoningName")),
+        mappedMaxHeightFt: asNumber(readField(attributes, info.fields, "maxHeightFt")),
+        rawValues: Object.values(attributes)
+          .map((v) => asString(v))
+          .filter((v): v is string => v !== null),
+        method: attempt.method,
+      };
     }
 
-    const attributes = features[0]!.properties;
-    sources.push(okSource(layer));
-    return {
-      districtCode: asString(readField(attributes, info.fields, "zoningDistrict")),
-      districtName: asString(readField(attributes, info.fields, "zoningName")),
-      mappedMaxHeightFt: asNumber(readField(attributes, info.fields, "maxHeightFt")),
-    };
+    sources.push({ ...okSource(layer), status: "empty" });
+    gaps.push("No zoning district polygon lies on or near this parcel, so the district was estimated.");
+    return NO_ZONING;
   } catch (error) {
     sources.push(failedSource(layer, error));
-    gaps.push("The city zoning layer was unreachable, so the district could not be confirmed.");
-    return { districtCode: null, districtName: null, mappedMaxHeightFt: null };
+    gaps.push("The city zoning layer was unreachable, so the district was estimated rather than read.");
+    return NO_ZONING;
   }
 }
 

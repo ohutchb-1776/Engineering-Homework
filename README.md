@@ -75,10 +75,15 @@ Every figure is labelled with what kind of number it is:
 | **our assumption** | A modelling choice this app made — not law |
 | **calculated** | Arithmetic on the above |
 
-When something cannot be determined, the app says "not determined" and lists it
-under *What this app could not determine*. It never substitutes a plausible
-default. A district that is not in the rule dataset produces no envelope at
-all.
+**Every parcel gets an estimate.** When a parcel's own standard is missing —
+the district is not in the rule dataset, the zoning layer returned nothing,
+or the table leaves a value blank — typical values for the district's family
+(residential, business, industrial…) fill the gap, the figure is badged **our
+assumption**, the trace names each estimated field, and a constraint says
+which district was unrecognised and how to add it. The base estimate is
+always shown next to the **community-need pathway**: what Maine law obliges
+the city to allow for affordable housing (at least one storey or 14 ft more,
+2.5× density). What the app never does is present an estimate as a rule.
 
 ### Portland-specific things it knows
 
@@ -199,7 +204,7 @@ src/lib/engine/               the calculation and its explanation trace
 src/app/                      the page, the JSON API, and /diagnostics
 scripts/gis-probe.ts          where every layer resolves, on the command line
 scripts/rules-lint.ts         dataset integrity and verification status
-tests/                        109 tests, no network
+tests/                        116 tests, no network
 ```
 
 ### Why there is no LLM
@@ -212,7 +217,7 @@ you add one later, it should read the trace and never the code.
 
 ### Tests
 
-109 tests, no network access required.
+116 tests, no network access required.
 
 ```
 tests/geometry.test.ts   setback clipping, frontage detection, projection accuracy

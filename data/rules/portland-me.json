@@ -1,6 +1,6 @@
 {
   "jurisdiction": "Portland, Maine",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "codeEdition": "ReCode Portland — Chapter 14 (Land Use), effective December 4, 2024",
   "codeEffectiveDate": "2024-12-04",
   "codeCitation": "portland-ch14",
@@ -99,6 +99,15 @@
       "checked": null
     },
     {
+      "id": "estimate-defaults",
+      "document": "This project's documented estimating defaults (docs/ASSUMPTIONS.md)",
+      "section": "Family defaults",
+      "title": "Estimating defaults used when the district's own standard is unavailable",
+      "url": "https://github.com/ohutchb-1776/Engineering-Homework/blob/main/docs/ASSUMPTIONS.md",
+      "edition": "Dataset v0.2.0",
+      "checked": "2026-09-18"
+    },
+    {
       "id": "mrs-30a-4364",
       "document": "Maine Revised Statutes, Title 30-A, §4364",
       "section": "30-A M.R.S. §4364",
@@ -135,6 +144,116 @@
       "checked": "2026-09-18"
     }
   ],
+  "estimateDefaults": {
+    "citation": "estimate-defaults",
+    "note": "Used only where a parcel's own district standard is unavailable: the district is not in this dataset, the zoning layer returned nothing, or the district's table leaves the value blank. Every figure taken from here is labelled 'our assumption' on screen and named in the trace. These are typical values for Portland's district families, not the rule for any specific district.",
+    "families": {
+      "residential": {
+        "maxHeightFt": 35,
+        "maxStories": null,
+        "maxLotCoverageRatio": 0.4,
+        "minYardsFt": {
+          "front": 20,
+          "side": 10,
+          "rear": 20
+        },
+        "minLotAreaPerDwellingSf": 2000,
+        "multifamilyAllowed": true,
+        "rationale": "35 ft is the most common residential height cap in Portland and across Maine; the yards and coverage sit between the low- and medium-density districts. State law (30-A M.R.S. §4364-A) requires at least 3-4 units per lot wherever residential use is allowed, so multifamily is treated as allowed."
+      },
+      "mixed-use": {
+        "maxHeightFt": 45,
+        "maxStories": null,
+        "maxLotCoverageRatio": 0.75,
+        "minYardsFt": {
+          "front": 0,
+          "side": 0,
+          "rear": 10
+        },
+        "minLotAreaPerDwellingSf": 725,
+        "multifamilyAllowed": true,
+        "rationale": "Portland's mixed-use and community-business districts cluster around 45 ft with no front or side yard and a modest rear yard."
+      },
+      "business": {
+        "maxHeightFt": 45,
+        "maxStories": null,
+        "maxLotCoverageRatio": 0.75,
+        "minYardsFt": {
+          "front": 0,
+          "side": 0,
+          "rear": 10
+        },
+        "minLotAreaPerDwellingSf": 725,
+        "multifamilyAllowed": true,
+        "rationale": "Typical of Portland's B-2 and B-4 districts; downtown B-3 allows far more but is governed by its own mapped height overlay when the GIS supplies one."
+      },
+      "industrial": {
+        "maxHeightFt": 45,
+        "maxStories": null,
+        "maxLotCoverageRatio": 0.5,
+        "minYardsFt": {
+          "front": 25,
+          "side": 20,
+          "rear": 20
+        },
+        "minLotAreaPerDwellingSf": null,
+        "multifamilyAllowed": false,
+        "rationale": "Industrial standards; housing is generally not a permitted use, but state law (30-A M.R.S. §4364-E) requires residential to be allowed in commercially zoned areas, so an envelope is still estimated."
+      },
+      "institutional": {
+        "maxHeightFt": 45,
+        "maxStories": null,
+        "maxLotCoverageRatio": 0.5,
+        "minYardsFt": {
+          "front": 20,
+          "side": 15,
+          "rear": 20
+        },
+        "minLotAreaPerDwellingSf": 1500,
+        "multifamilyAllowed": true,
+        "rationale": "Campus and institutional districts vary widely; this is a middle value."
+      },
+      "island": {
+        "maxHeightFt": 35,
+        "maxStories": null,
+        "maxLotCoverageRatio": 0.3,
+        "minYardsFt": {
+          "front": 25,
+          "side": 10,
+          "rear": 25
+        },
+        "minLotAreaPerDwellingSf": 5000,
+        "multifamilyAllowed": true,
+        "rationale": "Island residential districts are low-density; the state minimum is 3 units per lot on islands rather than 4."
+      },
+      "other": {
+        "maxHeightFt": 35,
+        "maxStories": null,
+        "maxLotCoverageRatio": 0.3,
+        "minYardsFt": {
+          "front": 20,
+          "side": 10,
+          "rear": 20
+        },
+        "minLotAreaPerDwellingSf": 2000,
+        "multifamilyAllowed": true,
+        "rationale": "Open space, resource protection and similar districts generally prohibit residential use; the envelope is shown as a hypothetical only, with a blocking constraint."
+      },
+      "unknown": {
+        "maxHeightFt": 35,
+        "maxStories": null,
+        "maxLotCoverageRatio": 0.4,
+        "minYardsFt": {
+          "front": 20,
+          "side": 10,
+          "rear": 20
+        },
+        "minLotAreaPerDwellingSf": 2000,
+        "multifamilyAllowed": true,
+        "rationale": "Nothing is known about the district, so the residential family default is used — the most common situation in Portland by land area."
+      }
+    }
+  },
   "districts": [
     {
       "code": "R-1",

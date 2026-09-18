@@ -2,7 +2,7 @@ import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
 import { analyze } from "../src/lib/engine/envelope";
 import { DEFAULT_ASSUMPTIONS } from "../src/lib/engine/assumptions";
-import { findDistrict } from "../src/lib/rules/load";
+import { findDistrict, ruleSet } from "../src/lib/rules/load";
 import { fakeSite } from "./fixtures/site";
 
 const R6 = findDistrict("R-6");
@@ -94,16 +94,62 @@ describe("analyze — a district the dataset does not hold", () => {
   const result = analyze(fakeSite({ districtCode: "ZZ-9" }), "x");
   const base = result.scenarios[0]!;
 
-  it("refuses to produce an envelope rather than guessing", () => {
-    assert.equal(base.envelope.maxHeightFt.value, null);
-    assert.equal(base.envelope.maxFootprintSf.value, null);
-    assert.equal(base.envelope.grossFloorAreaSf.value, null);
-    assert.equal(base.envelope.estimatedUnits.value, null);
+  it("still produces a complete estimate — every figure has a number", () => {
+    for (const [key, figure] of Object.entries(base.envelope)) {
+      assert.ok(typeof figure.value === "number", `${key} should be estimated, got ${figure.value}`);
+    }
   });
 
-  it("says so as a blocking constraint and as a gap", () => {
-    assert.ok(result.constraints.some((c) => c.id === "unknown-district" && c.severity === "blocking"));
-    assert.ok(result.gaps.some((g) => g.includes("ZZ-9")));
+  it("labels the height an assumption, from the unknown-family default", () => {
+    assert.equal(base.envelope.maxHeightFt.basis, "assumption");
+    assert.equal(base.envelope.maxHeightFt.value, ruleSet.estimateDefaults.families.unknown.maxHeightFt);
+    assert.equal(base.envelope.maxHeightFt.citation, ruleSet.estimateDefaults.citation);
+  });
+
+  it("says the district was estimated, in the trace and as a constraint", () => {
+    const step = result.trace.find((s) => s.id === "district")!;
+    assert.equal(step.basis, "assumption");
+    assert.match(step.detail, /ZZ-9/);
+    const constraint = result.constraints.find((c) => c.id === "district-estimated");
+    assert.ok(constraint, "expected a district-estimated constraint");
+    assert.equal(constraint.severity, "limiting");
+    assert.match(constraint.title, /ZZ-9/);
+    assert.equal(result.zoning.districtKnown, false);
+  });
+
+  it("infers the family from the code when it can", () => {
+    const residential = analyze(fakeSite({ districtCode: "R-99" }), "x");
+    assert.equal(
+      residential.scenarios[0]!.envelope.maxHeightFt.value,
+      ruleSet.estimateDefaults.families.residential.maxHeightFt,
+    );
+    const business = analyze(fakeSite({ districtCode: "B-99" }), "x");
+    assert.equal(
+      business.scenarios[0]!.envelope.maxHeightFt.value,
+      ruleSet.estimateDefaults.families.business.maxHeightFt,
+    );
+  });
+
+  it("estimates even with no district at all", () => {
+    const none = analyze(fakeSite({ districtCode: null }), "x");
+    assert.ok(typeof none.scenarios[0]!.envelope.maxHeightFt.value === "number");
+    assert.ok(none.scenarios.some((s) => s.id === "affordable"), "the community-need pathway is always offered");
+  });
+});
+
+describe("analyze — a district in the dataset with no height stated", () => {
+  it("fills the blank from the family default and says which fields it estimated", () => {
+    // ROS (open space) states no dimensional standards at all.
+    const result = analyze(fakeSite({ districtCode: "ROS" }), "x");
+    const base = result.scenarios[0]!;
+    assert.equal(result.zoning.districtKnown, true);
+    assert.ok(typeof base.envelope.maxHeightFt.value === "number");
+    assert.equal(base.envelope.maxHeightFt.basis, "assumption");
+    const fields = result.constraints.find((c) => c.id === "fields-estimated");
+    assert.ok(fields, "expected a fields-estimated constraint");
+    assert.match(fields.title, /maximum height/);
+    // ...and still says housing is not a permitted use there.
+    assert.ok(result.constraints.some((c) => c.id === "multifamily-not-allowed" && c.severity === "blocking"));
   });
 });
 
@@ -181,10 +227,14 @@ describe("analyze — the state affordable-housing pathway", () => {
 });
 
 describe("analyze — small lots", () => {
-  it("flags a lot the setbacks swallow entirely", () => {
+  it("flags a lot the setbacks swallow entirely, and estimates under a variance", () => {
     const result = analyze(fakeSite({ widthFt: 20, depthFt: 20, withStreet: false }), "x");
-    assert.equal(result.scenarios[0]!.envelope.maxFootprintSf.value, 0);
-    assert.ok(result.constraints.some((c) => c.id === "no-buildable-area"));
+    assert.ok(result.constraints.some((c) => c.id === "no-buildable-area" && c.severity === "blocking"));
+    // The setback envelope is zero, so the coverage cap stands in for it.
+    const setbacks = result.trace.find((s) => s.id === "setbacks")!;
+    assert.equal(setbacks.result.value, 0);
+    assert.equal(result.scenarios[0]!.envelope.maxFootprintSf.value, Math.round(400 * R6.maxLotCoverageRatio.value!));
+    assert.ok(result.gaps.some((g) => g.includes("variance")));
   });
 
   it("notes the statutory unit floor when the district allows fewer", () => {
